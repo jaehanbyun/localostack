@@ -623,11 +623,11 @@ server = conn.compute.create_server(
 ## Status
 
 - [x] Phase 1 Step 1: 아키텍처 설계
-- [x] Phase 1 Step 1: 프로젝트 스캐폴딩 (uv sync, 서버 기동 확인 완료. 포트 5000은 macOS AirPlay 충돌 → 환경변수로 해결)
-- [ ] Phase 1 Step 2: Keystone 구현
-- [ ] Phase 1 Step 3: Glance 구현
-- [ ] Phase 1 Step 4: Neutron 구현
-- [ ] Phase 1 Step 5: Nova 구현
+- [x] Phase 1 Step 1: 프로젝트 스캐폴딩 (uv sync, 서버 기동 확인 완료)
+- [x] Phase 1 Step 2: Keystone 구현 (토큰 CRUD, 서비스 카탈로그, 사용자/프로젝트/역할 CRUD, 인증 미들웨어)
+- [x] Phase 1 Step 3: Glance 구현 (이미지 CRUD, 파일 업로드/다운로드, cirros bootstrap)
+- [x] Phase 1 Step 4: Neutron 구현 (네트워크/서브넷/포트/보안그룹 CRUD, MAC/IP 자동할당)
+- [x] Phase 1 Step 5: Nova 구현 (서버 CRUD, 상태 머신, 플레이버, 키페어, limits)
 - [ ] Phase 1 Step 6: 통합 테스트
 
 ---
