@@ -261,6 +261,22 @@ async def server_action(server_id: str, request: Request):
         action = "stop"
     elif "reboot" in body:
         action = "reboot"
+    elif "pause" in body:
+        action = "pause"
+    elif "unpause" in body:
+        action = "unpause"
+    elif "suspend" in body:
+        action = "suspend"
+    elif "resume" in body:
+        action = "resume"
+    elif "rescue" in body:
+        action = "rescue"
+    elif "unrescue" in body:
+        action = "unrescue"
+    elif "shelve" in body:
+        action = "shelve"
+    elif "unshelve" in body:
+        action = "unshelve"
 
     if action is None:
         return _error(400, "Invalid server action")

@@ -15,11 +15,14 @@ VM_STATE_TO_STATUS: dict[tuple[str, Optional[str]], str] = {
     ("deleted", None): "DELETED",
     ("paused", None): "PAUSED",
     ("suspended", None): "SUSPENDED",
+    ("rescued", None): "RESCUE",
+    ("shelved_offloaded", None): "SHELVED_OFFLOADED",
 }
 
-# 상태 전이 테이블 (MVP)
+# 상태 전이 테이블
 # (current_vm_state, action) -> (new_vm_state, new_task_state, new_power_state)
 TRANSITIONS: dict[tuple[Optional[str], str], tuple[str, Optional[str], int]] = {
+    # 기본 lifecycle
     (None, "create"): ("active", None, 1),
     ("active", "stop"): ("stopped", None, 4),
     ("active", "reboot"): ("active", None, 1),
@@ -28,6 +31,24 @@ TRANSITIONS: dict[tuple[Optional[str], str], tuple[str, Optional[str], int]] = {
     ("stopped", "delete"): ("deleted", None, 0),
     ("error", "delete"): ("deleted", None, 0),
     ("building", "delete"): ("deleted", None, 0),
+    # pause / unpause
+    ("active", "pause"): ("paused", None, 3),
+    ("paused", "unpause"): ("active", None, 1),
+    ("paused", "delete"): ("deleted", None, 0),
+    # suspend / resume
+    ("active", "suspend"): ("suspended", None, 7),
+    ("suspended", "resume"): ("active", None, 1),
+    ("suspended", "delete"): ("deleted", None, 0),
+    # rescue / unrescue
+    ("active", "rescue"): ("rescued", None, 1),
+    ("stopped", "rescue"): ("rescued", None, 1),
+    ("rescued", "unrescue"): ("active", None, 1),
+    ("rescued", "delete"): ("deleted", None, 0),
+    # shelve / unshelve
+    ("active", "shelve"): ("shelved_offloaded", None, 0),
+    ("stopped", "shelve"): ("shelved_offloaded", None, 0),
+    ("shelved_offloaded", "unshelve"): ("active", None, 1),
+    ("shelved_offloaded", "delete"): ("deleted", None, 0),
 }
 
 # power_state 값
