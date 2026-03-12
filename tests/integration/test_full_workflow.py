@@ -8,6 +8,7 @@ KEYSTONE_PORT = 15000
 NOVA_PORT = 18774
 NEUTRON_PORT = 19696
 GLANCE_PORT = 19292
+HEAT_PORT = 18004
 
 KEYSTONE_URL = f"http://localhost:{KEYSTONE_PORT}"
 NOVA_URL = f"http://localhost:{NOVA_PORT}"
@@ -43,6 +44,7 @@ def server_process():
     env["LOCALOSTACK_NOVA_PORT"] = str(NOVA_PORT)
     env["LOCALOSTACK_NEUTRON_PORT"] = str(NEUTRON_PORT)
     env["LOCALOSTACK_GLANCE_PORT"] = str(GLANCE_PORT)
+    env["LOCALOSTACK_HEAT_PORT"] = str(HEAT_PORT)
     env["LOCALOSTACK_HOST"] = "127.0.0.1"
     env["LOCALOSTACK_ENDPOINT_HOST"] = "localhost"
 

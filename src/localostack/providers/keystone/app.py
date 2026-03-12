@@ -32,6 +32,7 @@ def create_keystone_app(backend=None, fault_registry=None) -> FastAPI:
         glance_port=config.glance_port,
         cinder_port=config.cinder_port,
         placement_port=config.placement_port,
+        heat_port=config.heat_port,
     )
     app.state.keystone_store = store
 
