@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import uuid
-from dataclasses import dataclass, field
+from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone
 from typing import Optional
 
@@ -53,10 +53,32 @@ class Snapshot:
 
 
 class CinderStore:
-    def __init__(self):
+    def __init__(self, backend=None):
+        self._b = backend
         self.volumes: dict[str, Volume] = {}
         self.volume_types: dict[str, VolumeType] = {}
         self.snapshots: dict[str, Snapshot] = {}
+
+    def _save(self, rtype: str, id: str, obj) -> None:
+        if self._b:
+            self._b.put("cinder", rtype, id, asdict(obj))
+
+    def _del(self, rtype: str, id: str) -> None:
+        if self._b:
+            self._b.delete("cinder", rtype, id)
+
+    def _load_persisted(self) -> None:
+        if not self._b:
+            return
+        for data in self._b.get_all("cinder", "volumes"):
+            vol = Volume(**data)
+            self.volumes[vol.id] = vol
+        for data in self._b.get_all("cinder", "snapshots"):
+            snap = Snapshot(**data)
+            self.snapshots[snap.id] = snap
+        for data in self._b.get_all("cinder", "volume_types"):
+            vt = VolumeType(**data)
+            self.volume_types[vt.id] = vt
 
     @staticmethod
     def _uuid() -> str:
@@ -64,7 +86,9 @@ class CinderStore:
 
     @staticmethod
     def _now() -> str:
-        return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.%fZ")
+        # gophercloud Cinder uses RFC3339MilliNoZ: no Z suffix, 3-digit milliseconds
+        now = datetime.now(timezone.utc)
+        return now.strftime("%Y-%m-%dT%H:%M:%S.") + f"{now.microsecond // 1000:03d}"
 
     # ── Volume CRUD ───────────────────────────────────────
 
@@ -99,6 +123,7 @@ class CinderStore:
             updated_at=now,
         )
         self.volumes[vol.id] = vol
+        self._save("volumes", vol.id, vol)
         return vol
 
     def get_volume(self, volume_id: str) -> Optional[Volume]:
@@ -115,6 +140,7 @@ class CinderStore:
             if hasattr(vol, key) and key not in ("id", "created_at"):
                 setattr(vol, key, value)
         vol.updated_at = self._now()
+        self._save("volumes", vol.id, vol)
         return vol
 
     def delete_volume(self, volume_id: str) -> bool:
@@ -122,6 +148,7 @@ class CinderStore:
         if vol is None:
             return False
         del self.volumes[volume_id]
+        self._del("volumes", volume_id)
         return True
 
     # ── Snapshot CRUD ─────────────────────────────────────
@@ -150,6 +177,7 @@ class CinderStore:
             updated_at=now,
         )
         self.snapshots[snap.id] = snap
+        self._save("snapshots", snap.id, snap)
         return snap
 
     def get_snapshot(self, snapshot_id: str) -> Optional[Snapshot]:
@@ -162,6 +190,7 @@ class CinderStore:
         if snapshot_id not in self.snapshots:
             return False
         del self.snapshots[snapshot_id]
+        self._del("snapshots", snapshot_id)
         return True
 
     # ── VolumeType ────────────────────────────────────────
@@ -175,5 +204,8 @@ class CinderStore:
     # ── Bootstrap ─────────────────────────────────────────
 
     def bootstrap(self):
-        vt = VolumeType(id="1", name="__DEFAULT__")
-        self.volume_types[vt.id] = vt
+        self._load_persisted()
+        if not self.volume_types:
+            vt = VolumeType(id="1", name="__DEFAULT__")
+            self.volume_types[vt.id] = vt
+            self._save("volume_types", vt.id, vt)

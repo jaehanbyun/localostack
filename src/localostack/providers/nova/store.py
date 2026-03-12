@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import random
 import uuid
-from dataclasses import dataclass, field
+from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone
 from typing import Optional
 
@@ -59,10 +59,32 @@ class Keypair:
 
 
 class NovaStore:
-    def __init__(self):
+    def __init__(self, backend=None):
+        self._b = backend
         self.servers: dict[str, Server] = {}
         self.flavors: dict[str, Flavor] = {}
         self.keypairs: dict[str, Keypair] = {}
+
+    def _save(self, rtype: str, id: str, obj) -> None:
+        if self._b:
+            self._b.put("nova", rtype, id, asdict(obj))
+
+    def _del(self, rtype: str, id: str) -> None:
+        if self._b:
+            self._b.delete("nova", rtype, id)
+
+    def _load_persisted(self) -> None:
+        if not self._b:
+            return
+        for data in self._b.get_all("nova", "servers"):
+            srv = Server(**data)
+            self.servers[srv.id] = srv
+        for data in self._b.get_all("nova", "flavors"):
+            f = Flavor(**data)
+            self.flavors[f.id] = f
+        for data in self._b.get_all("nova", "keypairs"):
+            kp = Keypair(**data)
+            self.keypairs[kp.id] = kp
 
     @staticmethod
     def _uuid() -> str:
@@ -163,6 +185,7 @@ class NovaStore:
             updated_at=now,
         )
         self.servers[server.id] = server
+        self._save("servers", server.id, server)
         return server
 
     def get_server(self, server_id: str) -> Optional[Server]:
@@ -186,6 +209,7 @@ class NovaStore:
             if hasattr(srv, key) and key not in ("id", "created_at"):
                 setattr(srv, key, value)
         srv.updated_at = self._now()
+        self._save("servers", srv.id, srv)
         return srv
 
     def delete_server(self, server_id: str) -> bool:
@@ -198,6 +222,7 @@ class NovaStore:
         srv.vm_state, srv.task_state, srv.power_state = result
         srv.status = get_status(srv.vm_state, srv.task_state)
         srv.updated_at = self._now()
+        self._del("servers", server_id)
         return True
 
     # ── Server Actions ────────────────────────────────────
@@ -212,6 +237,7 @@ class NovaStore:
         srv.vm_state, srv.task_state, srv.power_state = result
         srv.status = get_status(srv.vm_state, srv.task_state)
         srv.updated_at = self._now()
+        self._save("servers", srv.id, srv)
         return srv
 
     # ── Flavor CRUD ───────────────────────────────────────
@@ -241,6 +267,7 @@ class NovaStore:
             is_public=is_public,
         )
         self.flavors[flavor.id] = flavor
+        self._save("flavors", flavor.id, flavor)
         return flavor
 
     def get_flavor(self, flavor_id: str) -> Optional[Flavor]:
@@ -270,6 +297,7 @@ class NovaStore:
             created_at=now,
         )
         self.keypairs[kp.id] = kp
+        self._save("keypairs", kp.id, kp)
         return kp
 
     def get_keypair(self, name: str) -> Optional[Keypair]:
@@ -290,6 +318,7 @@ class NovaStore:
         for kp_id, kp in self.keypairs.items():
             if kp.name == name:
                 del self.keypairs[kp_id]
+                self._del("keypairs", kp_id)
                 return True
         return False
 
@@ -297,12 +326,14 @@ class NovaStore:
 
     def bootstrap(self):
         """표준 플레이버를 등록한다."""
-        standard_flavors = [
-            {"id": "1", "name": "m1.tiny", "vcpus": 1, "ram": 512, "disk": 1},
-            {"id": "2", "name": "m1.small", "vcpus": 1, "ram": 2048, "disk": 20},
-            {"id": "3", "name": "m1.medium", "vcpus": 2, "ram": 4096, "disk": 40},
-            {"id": "4", "name": "m1.large", "vcpus": 4, "ram": 8192, "disk": 80},
-            {"id": "5", "name": "m1.xlarge", "vcpus": 8, "ram": 16384, "disk": 160},
-        ]
-        for f in standard_flavors:
-            self.create_flavor(**f)
+        self._load_persisted()
+        if not self.flavors:
+            standard_flavors = [
+                {"id": "1", "name": "m1.tiny", "vcpus": 1, "ram": 512, "disk": 1},
+                {"id": "2", "name": "m1.small", "vcpus": 1, "ram": 2048, "disk": 20},
+                {"id": "3", "name": "m1.medium", "vcpus": 2, "ram": 4096, "disk": 40},
+                {"id": "4", "name": "m1.large", "vcpus": 4, "ram": 8192, "disk": 80},
+                {"id": "5", "name": "m1.xlarge", "vcpus": 8, "ram": 16384, "disk": 160},
+            ]
+            for f in standard_flavors:
+                self.create_flavor(**f)

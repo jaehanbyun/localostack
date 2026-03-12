@@ -5,7 +5,7 @@ from .routes import router, _AuthError
 from .store import NeutronStore
 
 
-def create_neutron_app(admin_project_id: str | None = None) -> FastAPI:
+def create_neutron_app(admin_project_id: str | None = None, backend=None) -> FastAPI:
     app = FastAPI(
         title="LocalOStack Neutron",
         description="Networking Service API v2.0",
@@ -14,7 +14,7 @@ def create_neutron_app(admin_project_id: str | None = None) -> FastAPI:
 
     config = load_config()
 
-    store = NeutronStore()
+    store = NeutronStore(backend=backend)
     store.bootstrap(admin_project_id=admin_project_id or config.admin_project)
     app.state.neutron_store = store
 

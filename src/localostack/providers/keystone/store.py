@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import uuid
-from dataclasses import dataclass, field
+from dataclasses import asdict, dataclass, field
 from datetime import datetime, timedelta, timezone
 from typing import Optional
 
@@ -75,7 +75,8 @@ class Token:
 
 
 class KeystoneStore:
-    def __init__(self):
+    def __init__(self, backend=None):
+        self._b = backend
         self.domains: dict[str, Domain] = {}
         self.projects: dict[str, Project] = {}
         self.users: dict[str, User] = {}
@@ -84,6 +85,30 @@ class KeystoneStore:
         self.services: dict[str, Service] = {}
         self.endpoints: dict[str, Endpoint] = {}
         self.tokens: dict[str, Token] = {}
+
+    def _save(self, rtype: str, id: str, obj) -> None:
+        if self._b:
+            self._b.put("keystone", rtype, id, asdict(obj))
+
+    def _del(self, rtype: str, id: str) -> None:
+        if self._b:
+            self._b.delete("keystone", rtype, id)
+
+    def _load_persisted(self) -> None:
+        if not self._b:
+            return
+        for data in self._b.get_all("keystone", "users"):
+            u = User(**data)
+            self.users[u.id] = u
+        for data in self._b.get_all("keystone", "projects"):
+            p = Project(**data)
+            self.projects[p.id] = p
+        for data in self._b.get_all("keystone", "roles"):
+            r = Role(**data)
+            self.roles[r.id] = r
+        for data in self._b.get_all("keystone", "role_assignments"):
+            ra = RoleAssignment(**data)
+            self.role_assignments.append(ra)
 
     # ── helpers ──────────────────────────────────────────
 
@@ -180,51 +205,67 @@ class KeystoneStore:
         glance_port: int = 9292,
         cinder_port: int = 8776,
     ):
-        # domain
-        domain = Domain(id="default", name="Default", enabled=True)
-        self.domains[domain.id] = domain
+        self._load_persisted()
 
-        # project
-        proj = Project(
-            id=self._uuid(),
-            name=admin_project,
-            domain_id=domain.id,
-        )
-        self.projects[proj.id] = proj
+        if not self.users:
+            # domain
+            domain = Domain(id="default", name="Default", enabled=True)
+            self.domains[domain.id] = domain
 
-        # user
-        user = User(
-            id=self._uuid(),
-            name=admin_username,
-            password=admin_password,
-            domain_id=domain.id,
-            default_project_id=proj.id,
-        )
-        self.users[user.id] = user
+            # project
+            proj = Project(
+                id=self._uuid(),
+                name=admin_project,
+                domain_id=domain.id,
+            )
+            self.projects[proj.id] = proj
+            self._save("projects", proj.id, proj)
 
-        # roles
-        admin_role = Role(id=self._uuid(), name="admin")
-        member_role = Role(id=self._uuid(), name="member")
-        reader_role = Role(id=self._uuid(), name="reader")
-        for r in (admin_role, member_role, reader_role):
-            self.roles[r.id] = r
+            # user
+            user = User(
+                id=self._uuid(),
+                name=admin_username,
+                password=admin_password,
+                domain_id=domain.id,
+                default_project_id=proj.id,
+            )
+            self.users[user.id] = user
+            self._save("users", user.id, user)
 
-        # role assignments
-        self.role_assignments.append(
-            RoleAssignment(user_id=user.id, project_id=proj.id, role_id=admin_role.id)
-        )
-        self.role_assignments.append(
-            RoleAssignment(user_id=user.id, project_id=proj.id, role_id=member_role.id)
-        )
+            # roles
+            admin_role = Role(id=self._uuid(), name="admin")
+            member_role = Role(id=self._uuid(), name="member")
+            reader_role = Role(id=self._uuid(), name="reader")
+            for r in (admin_role, member_role, reader_role):
+                self.roles[r.id] = r
+                self._save("roles", r.id, r)
 
-        # services + endpoints
+            # role assignments
+            ra1 = RoleAssignment(user_id=user.id, project_id=proj.id, role_id=admin_role.id)
+            ra2 = RoleAssignment(user_id=user.id, project_id=proj.id, role_id=member_role.id)
+            self.role_assignments.append(ra1)
+            self.role_assignments.append(ra2)
+            self._save("role_assignments", f"{user.id}:{proj.id}:{admin_role.id}", ra1)
+            self._save("role_assignments", f"{user.id}:{proj.id}:{member_role.id}", ra2)
+        else:
+            # Restore domain (not persisted separately, always re-create)
+            domain = Domain(id="default", name="Default", enabled=True)
+            self.domains[domain.id] = domain
+
+        # Find the admin project id (may have been loaded from persistence)
+        proj_obj = self.find_project_by_name(admin_project, "default")
+        proj_id = proj_obj.id if proj_obj else list(self.projects.values())[0].id
+
+        # Services + endpoints are always re-created (port-dependent)
+        self.services.clear()
+        self.endpoints.clear()
         base = f"http://{endpoint_host}"
         service_defs = [
             ("identity", "keystone", f"{base}:{keystone_port}/v3"),
             ("compute", "nova", f"{base}:{nova_port}/v2.1"),
             ("network", "neutron", f"{base}:{neutron_port}"),
             ("image", "glance", f"{base}:{glance_port}"),
-            ("volumev3", "cinderv3", f"{base}:{cinder_port}/v3/{proj.id}"),
+            ("volumev3", "cinderv3", f"{base}:{cinder_port}/v3/{proj_id}"),
         ]
         for stype, sname, url in service_defs:
             svc = Service(id=self._uuid(), type=stype, name=sname)

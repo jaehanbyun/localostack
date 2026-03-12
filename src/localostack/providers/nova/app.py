@@ -37,7 +37,7 @@ def _parse_microversion(request: Request) -> str:
         return NOVA_MIN_MICROVERSION
 
 
-def create_nova_app() -> FastAPI:
+def create_nova_app(backend=None) -> FastAPI:
     app = FastAPI(
         title="LocalOStack Nova",
         description="Compute Service API v2.1",
@@ -46,7 +46,7 @@ def create_nova_app() -> FastAPI:
 
     config = load_config()
 
-    store = NovaStore()
+    store = NovaStore(backend=backend)
     store.bootstrap()
     app.state.nova_store = store
     app.state.nova_config = config

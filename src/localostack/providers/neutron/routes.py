@@ -125,7 +125,14 @@ def _security_group_rule_to_dict(rule) -> dict:
 async def list_networks(request: Request):
     _require_token(request)
     store = _get_store(request)
+    params = request.query_params
     networks = store.list_networks()
+    if params.get("name"):
+        networks = [n for n in networks if n.name == params["name"]]
+    if params.get("id"):
+        networks = [n for n in networks if n.id == params["id"]]
+    if params.get("status"):
+        networks = [n for n in networks if n.status == params["status"]]
     return {"networks": [_network_to_dict(n) for n in networks]}
 
 

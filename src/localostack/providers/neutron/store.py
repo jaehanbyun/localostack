@@ -3,7 +3,7 @@ from __future__ import annotations
 import ipaddress
 import random
 import uuid
-from dataclasses import dataclass, field
+from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone
 from typing import Optional
 
@@ -83,12 +83,40 @@ class SecurityGroupRule:
 
 
 class NeutronStore:
-    def __init__(self):
+    def __init__(self, backend=None):
+        self._b = backend
         self.networks: dict[str, Network] = {}
         self.subnets: dict[str, Subnet] = {}
         self.ports: dict[str, Port] = {}
         self.security_groups: dict[str, SecurityGroup] = {}
         self.security_group_rules: dict[str, SecurityGroupRule] = {}
+
+    def _save(self, rtype: str, id: str, obj) -> None:
+        if self._b:
+            self._b.put("neutron", rtype, id, asdict(obj))
+
+    def _del(self, rtype: str, id: str) -> None:
+        if self._b:
+            self._b.delete("neutron", rtype, id)
+
+    def _load_persisted(self) -> None:
+        if not self._b:
+            return
+        for data in self._b.get_all("neutron", "networks"):
+            net = Network(**data)
+            self.networks[net.id] = net
+        for data in self._b.get_all("neutron", "subnets"):
+            sub = Subnet(**data)
+            self.subnets[sub.id] = sub
+        for data in self._b.get_all("neutron", "ports"):
+            port = Port(**data)
+            self.ports[port.id] = port
+        for data in self._b.get_all("neutron", "security_groups"):
+            sg = SecurityGroup(**data)
+            self.security_groups[sg.id] = sg
+        for data in self._b.get_all("neutron", "security_group_rules"):
+            rule = SecurityGroupRule(**data)
+            self.security_group_rules[rule.id] = rule
 
     @staticmethod
     def _uuid() -> str:
@@ -180,6 +208,7 @@ class NeutronStore:
             updated_at=now,
         )
         self.networks[net.id] = net
+        self._save("networks", net.id, net)
         return net
 
     def get_network(self, network_id: str) -> Optional[Network]:
@@ -201,12 +230,14 @@ class NeutronStore:
             if hasattr(net, key) and key not in ("id", "created_at", "subnets"):
                 setattr(net, key, value)
         net.updated_at = self._now()
+        self._save("networks", net.id, net)
         return net
 
     def delete_network(self, network_id: str) -> bool:
         if network_id not in self.networks:
             return False
         del self.networks[network_id]
+        self._del("networks", network_id)
         return True
 
     # ── Subnet CRUD ────────────────────────────────────────
@@ -251,6 +282,8 @@ class NeutronStore:
         )
         self.subnets[subnet.id] = subnet
         net.subnets.append(subnet.id)
+        self._save("subnets", subnet.id, subnet)
+        self._save("networks", net.id, net)
         return subnet
 
     def get_subnet(self, subnet_id: str) -> Optional[Subnet]:
@@ -272,6 +305,7 @@ class NeutronStore:
             if hasattr(sub, key) and key not in ("id", "created_at", "network_id"):
                 setattr(sub, key, value)
         sub.updated_at = self._now()
+        self._save("subnets", sub.id, sub)
         return sub
 
     def delete_subnet(self, subnet_id: str) -> bool:
@@ -281,7 +315,9 @@ class NeutronStore:
         net = self.networks.get(sub.network_id)
         if net and subnet_id in net.subnets:
             net.subnets.remove(subnet_id)
+            self._save("networks", net.id, net)
         del self.subnets[subnet_id]
+        self._del("subnets", subnet_id)
         return True
 
     # ── Port CRUD ──────────────────────────────────────────
@@ -334,6 +370,7 @@ class NeutronStore:
             updated_at=now,
         )
         self.ports[port.id] = port
+        self._save("ports", port.id, port)
         return port
 
     def _find_default_security_group(self, tenant_id: str) -> Optional[SecurityGroup]:
@@ -373,12 +410,14 @@ class NeutronStore:
             if hasattr(port, key) and key not in ("id", "created_at", "mac_address"):
                 setattr(port, key, value)
         port.updated_at = self._now()
+        self._save("ports", port.id, port)
         return port
 
     def delete_port(self, port_id: str) -> bool:
         if port_id not in self.ports:
             return False
         del self.ports[port_id]
+        self._del("ports", port_id)
         return True
 
     # ── Security Group CRUD ────────────────────────────────
@@ -401,6 +440,10 @@ class NeutronStore:
         )
         self.security_groups[sg.id] = sg
         self._add_default_egress_rules(sg)
+        self._save("security_groups", sg.id, sg)
+        for rule_id, rule in self.security_group_rules.items():
+            if rule.security_group_id == sg.id:
+                self._save("security_group_rules", rule_id, rule)
         return sg
 
     def get_security_group(self, sg_id: str) -> Optional[SecurityGroup]:
@@ -422,6 +465,7 @@ class NeutronStore:
             if hasattr(sg, key) and key not in ("id", "created_at", "security_group_rules"):
                 setattr(sg, key, value)
         sg.updated_at = self._now()
+        self._save("security_groups", sg.id, sg)
         return sg
 
     def delete_security_group(self, sg_id: str) -> bool:
@@ -433,7 +477,9 @@ class NeutronStore:
         ]
         for r_id in rules_to_delete:
             del self.security_group_rules[r_id]
+            self._del("security_group_rules", r_id)
         del self.security_groups[sg_id]
+        self._del("security_groups", sg_id)
         return True
 
     # ── Security Group Rule CRUD ───────────────────────────
@@ -468,6 +514,8 @@ class NeutronStore:
         )
         self.security_group_rules[rule.id] = rule
         sg.security_group_rules.append(self._rule_to_dict(rule))
+        self._save("security_group_rules", rule.id, rule)
+        self._save("security_groups", sg.id, sg)
         return rule
 
     def get_security_group_rule(self, rule_id: str) -> Optional[SecurityGroupRule]:
@@ -490,41 +538,45 @@ class NeutronStore:
             sg.security_group_rules = [
                 r for r in sg.security_group_rules if r["id"] != rule_id
             ]
+            self._save("security_groups", sg.id, sg)
         del self.security_group_rules[rule_id]
+        self._del("security_group_rules", rule_id)
         return True
 
     # ── Bootstrap ──────────────────────────────────────────
 
     def bootstrap(self, *, admin_project_id: str):
-        # Default security group
-        self.create_security_group(
-            name="default",
-            tenant_id=admin_project_id,
-            description="Default security group",
-        )
+        self._load_persisted()
+        if not self.networks:
+            # Default security group
+            self.create_security_group(
+                name="default",
+                tenant_id=admin_project_id,
+                description="Default security group",
+            )
 
-        # Public external network + subnet
-        pub_net = self.create_network(
-            name="public",
-            tenant_id=admin_project_id,
-            shared=True,
-            external=True,
-        )
-        self.create_subnet(
-            name="public-subnet",
-            network_id=pub_net.id,
-            cidr="10.0.0.0/24",
-            tenant_id=admin_project_id,
-        )
+            # Public external network + subnet
+            pub_net = self.create_network(
+                name="public",
+                tenant_id=admin_project_id,
+                shared=True,
+                external=True,
+            )
+            self.create_subnet(
+                name="public-subnet",
+                network_id=pub_net.id,
+                cidr="10.0.0.0/24",
+                tenant_id=admin_project_id,
+            )
 
-        # Private internal network + subnet
-        priv_net = self.create_network(
-            name="private",
-            tenant_id=admin_project_id,
-        )
-        self.create_subnet(
-            name="private-subnet",
-            network_id=priv_net.id,
-            cidr="192.168.1.0/24",
-            tenant_id=admin_project_id,
-        )
+            # Private internal network + subnet
+            priv_net = self.create_network(
+                name="private",
+                tenant_id=admin_project_id,
+            )
+            self.create_subnet(
+                name="private-subnet",
+                network_id=priv_net.id,
+                cidr="192.168.1.0/24",
+                tenant_id=admin_project_id,
+            )

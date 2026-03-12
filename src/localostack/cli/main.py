@@ -3,6 +3,7 @@ import sys
 
 from localostack.core.config import load_config
 from localostack.core.gateway import MultiPortServer
+from localostack.core.persistence import create_backend
 from localostack.providers.keystone.app import create_keystone_app
 from localostack.providers.nova.app import create_nova_app
 from localostack.providers.neutron.app import create_neutron_app
@@ -25,8 +26,12 @@ def main():
     logger.info(f"  Neutron:  {config.host}:{config.neutron_port}")
     logger.info(f"  Glance:   {config.host}:{config.glance_port}")
     logger.info(f"  Cinder:   {config.host}:{config.cinder_port}")
+    if config.persistence != "memory":
+        logger.info(f"  Persistence: {config.persistence} ({config.db_path})")
 
-    keystone_app = create_keystone_app()
+    backend = create_backend(config.persistence, config.db_path)
+
+    keystone_app = create_keystone_app(backend=backend)
     admin_proj = keystone_app.state.keystone_store.find_project_by_name(
         config.admin_project, config.default_domain,
     )
@@ -34,10 +39,10 @@ def main():
 
     server = MultiPortServer()
     server.add(keystone_app, config.host, config.keystone_port, "keystone")
-    server.add(create_nova_app(), config.host, config.nova_port, "nova")
-    server.add(create_neutron_app(admin_project_id=admin_project_id), config.host, config.neutron_port, "neutron")
-    server.add(create_glance_app(admin_project_id=admin_project_id), config.host, config.glance_port, "glance")
-    server.add(create_cinder_app(), config.host, config.cinder_port, "cinder")
+    server.add(create_nova_app(backend=backend), config.host, config.nova_port, "nova")
+    server.add(create_neutron_app(admin_project_id=admin_project_id, backend=backend), config.host, config.neutron_port, "neutron")
+    server.add(create_glance_app(admin_project_id=admin_project_id, backend=backend), config.host, config.glance_port, "glance")
+    server.add(create_cinder_app(backend=backend), config.host, config.cinder_port, "cinder")
 
     try:
         server.run()

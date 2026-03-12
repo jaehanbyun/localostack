@@ -6,14 +6,14 @@ from .routes import router, _AuthError
 from .store import CinderStore
 
 
-def create_cinder_app() -> FastAPI:
+def create_cinder_app(backend=None) -> FastAPI:
     app = FastAPI(
         title="LocalOStack Cinder",
         description="Block Storage Service API v3",
         version="3.0",
     )
 
-    store = CinderStore()
+    store = CinderStore(backend=backend)
     store.bootstrap()
     app.state.cinder_store = store
 

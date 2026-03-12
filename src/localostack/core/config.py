@@ -22,6 +22,10 @@ class ServiceConfig:
     server_build_delay: int = 5       # async 모드 시 초
     server_build_steps: int = 1       # counted 모드 시 GET 횟수
 
+    # Persistence
+    persistence: str = "memory"  # "memory" | "sqlite"
+    db_path: str = "/var/lib/localostack/state.db"
+
 
 def load_config() -> ServiceConfig:
     """환경변수에서 설정을 로드한다."""
@@ -38,4 +42,6 @@ def load_config() -> ServiceConfig:
     config.server_build_mode = os.environ.get("LOCALOSTACK_SERVER_BUILD_MODE", config.server_build_mode)
     config.server_build_delay = int(os.environ.get("LOCALOSTACK_SERVER_BUILD_DELAY", config.server_build_delay))
     config.server_build_steps = int(os.environ.get("LOCALOSTACK_SERVER_BUILD_STEPS", config.server_build_steps))
+    config.persistence = os.environ.get("LOCALOSTACK_PERSISTENCE", config.persistence)
+    config.db_path = os.environ.get("LOCALOSTACK_DB_PATH", config.db_path)
     return config

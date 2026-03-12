@@ -5,7 +5,7 @@ from .routes import router, _AuthError
 from .store import GlanceStore
 
 
-def create_glance_app(admin_project_id: str | None = None) -> FastAPI:
+def create_glance_app(admin_project_id: str | None = None, backend=None) -> FastAPI:
     app = FastAPI(
         title="LocalOStack Glance",
         description="Image Service API v2",
@@ -14,7 +14,7 @@ def create_glance_app(admin_project_id: str | None = None) -> FastAPI:
 
     config = load_config()
 
-    store = GlanceStore()
+    store = GlanceStore(backend=backend)
     store.bootstrap(admin_project_id=admin_project_id or config.admin_project)
     app.state.glance_store = store
 

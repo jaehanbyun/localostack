@@ -9,7 +9,7 @@ from .routes import router, _AuthError
 from .store import KeystoneStore
 
 
-def create_keystone_app() -> FastAPI:
+def create_keystone_app(backend=None) -> FastAPI:
     app = FastAPI(
         title="LocalOStack Keystone",
         description="Identity Service API v3",
@@ -19,7 +19,7 @@ def create_keystone_app() -> FastAPI:
     config = load_config()
     endpoint_host = os.environ.get("LOCALOSTACK_ENDPOINT_HOST", "localhost")
 
-    store = KeystoneStore()
+    store = KeystoneStore(backend=backend)
     store.bootstrap(
         admin_username=config.admin_username,
         admin_password=config.admin_password,
