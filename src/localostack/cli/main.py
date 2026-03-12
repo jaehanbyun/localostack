@@ -7,6 +7,7 @@ from localostack.providers.keystone.app import create_keystone_app
 from localostack.providers.nova.app import create_nova_app
 from localostack.providers.neutron.app import create_neutron_app
 from localostack.providers.glance.app import create_glance_app
+from localostack.providers.cinder.app import create_cinder_app
 
 logging.basicConfig(
     level=logging.INFO,
@@ -23,6 +24,7 @@ def main():
     logger.info(f"  Nova:     {config.host}:{config.nova_port}")
     logger.info(f"  Neutron:  {config.host}:{config.neutron_port}")
     logger.info(f"  Glance:   {config.host}:{config.glance_port}")
+    logger.info(f"  Cinder:   {config.host}:{config.cinder_port}")
 
     keystone_app = create_keystone_app()
     admin_proj = keystone_app.state.keystone_store.find_project_by_name(
@@ -35,6 +37,7 @@ def main():
     server.add(create_nova_app(), config.host, config.nova_port, "nova")
     server.add(create_neutron_app(admin_project_id=admin_project_id), config.host, config.neutron_port, "neutron")
     server.add(create_glance_app(admin_project_id=admin_project_id), config.host, config.glance_port, "glance")
+    server.add(create_cinder_app(), config.host, config.cinder_port, "cinder")
 
     try:
         server.run()

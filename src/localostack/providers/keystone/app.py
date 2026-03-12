@@ -30,6 +30,7 @@ def create_keystone_app() -> FastAPI:
         nova_port=config.nova_port,
         neutron_port=config.neutron_port,
         glance_port=config.glance_port,
+        cinder_port=config.cinder_port,
     )
     app.state.keystone_store = store
 

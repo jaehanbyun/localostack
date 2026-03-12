@@ -32,6 +32,7 @@ def load_config() -> ServiceConfig:
     config.nova_port = int(os.environ.get("LOCALOSTACK_NOVA_PORT", config.nova_port))
     config.neutron_port = int(os.environ.get("LOCALOSTACK_NEUTRON_PORT", config.neutron_port))
     config.glance_port = int(os.environ.get("LOCALOSTACK_GLANCE_PORT", config.glance_port))
+    config.cinder_port = int(os.environ.get("LOCALOSTACK_CINDER_PORT", config.cinder_port))
     config.admin_username = os.environ.get("LOCALOSTACK_ADMIN_USERNAME", config.admin_username)
     config.admin_password = os.environ.get("LOCALOSTACK_ADMIN_PASSWORD", config.admin_password)
     config.server_build_mode = os.environ.get("LOCALOSTACK_SERVER_BUILD_MODE", config.server_build_mode)

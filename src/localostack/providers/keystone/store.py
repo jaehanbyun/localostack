@@ -178,6 +178,7 @@ class KeystoneStore:
         nova_port: int = 8774,
         neutron_port: int = 9696,
         glance_port: int = 9292,
+        cinder_port: int = 8776,
     ):
         # domain
         domain = Domain(id="default", name="Default", enabled=True)
@@ -223,6 +224,7 @@ class KeystoneStore:
             ("compute", "nova", f"{base}:{nova_port}/v2.1"),
             ("network", "neutron", f"{base}:{neutron_port}"),
             ("image", "glance", f"{base}:{glance_port}"),
+            ("volumev3", "cinderv3", f"{base}:{cinder_port}/v3/{proj.id}"),
         ]
         for stype, sname, url in service_defs:
             svc = Service(id=self._uuid(), type=stype, name=sname)

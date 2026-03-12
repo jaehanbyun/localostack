@@ -12,6 +12,7 @@ KEYSTONE_PORT = 25000
 NOVA_PORT = 28774
 NEUTRON_PORT = 29696
 GLANCE_PORT = 29292
+CINDER_PORT = 28776
 
 KEYSTONE_URL = f"http://localhost:{KEYSTONE_PORT}"
 
@@ -23,6 +24,7 @@ def server_process():
     env["LOCALOSTACK_NOVA_PORT"] = str(NOVA_PORT)
     env["LOCALOSTACK_NEUTRON_PORT"] = str(NEUTRON_PORT)
     env["LOCALOSTACK_GLANCE_PORT"] = str(GLANCE_PORT)
+    env["LOCALOSTACK_CINDER_PORT"] = str(CINDER_PORT)
     env["LOCALOSTACK_HOST"] = "127.0.0.1"
     env["LOCALOSTACK_ENDPOINT_HOST"] = "localhost"
 
@@ -134,3 +136,26 @@ class TestNovaSDK:
 
         # Delete
         conn.compute.delete_server(server.id)
+
+
+class TestCinderSDK:
+    def test_list_volume_types(self, conn):
+        types = list(conn.block_storage.types())
+        assert len(types) >= 1
+        names = [t.name for t in types]
+        assert "__DEFAULT__" in names
+
+    def test_volume_lifecycle(self, conn):
+        # Create
+        vol = conn.block_storage.create_volume(name="sdk-test-vol", size=1)
+        assert vol.name == "sdk-test-vol"
+        assert vol.size == 1
+        assert vol.status in ("available", "creating")
+
+        # List
+        vols = list(conn.block_storage.volumes())
+        ids = [v.id for v in vols]
+        assert vol.id in ids
+
+        # Delete
+        conn.block_storage.delete_volume(vol.id)
