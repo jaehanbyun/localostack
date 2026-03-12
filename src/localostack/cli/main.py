@@ -65,7 +65,7 @@ def main():
     server.add(create_cinder_app(backend=backend, fault_registry=registry), config.host, config.cinder_port, "cinder")
     server.add(create_placement_app(backend=backend, fault_registry=registry), config.host, config.placement_port, "placement")
     server.add(create_heat_app(backend=backend, fault_registry=registry), config.host, config.heat_port, "heat")
-    server.add(create_admin_app(registry), config.host, config.admin_port, "admin")
+    server.add(create_admin_app(registry, config=config), config.host, config.admin_port, "admin")
 
     try:
         server.run()
