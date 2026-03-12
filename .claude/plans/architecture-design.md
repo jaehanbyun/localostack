@@ -628,7 +628,7 @@ server = conn.compute.create_server(
 - [x] Phase 1 Step 3: Glance 구현 (이미지 CRUD, 파일 업로드/다운로드, cirros bootstrap)
 - [x] Phase 1 Step 4: Neutron 구현 (네트워크/서브넷/포트/보안그룹 CRUD, MAC/IP 자동할당)
 - [x] Phase 1 Step 5: Nova 구현 (서버 CRUD, 상태 머신, 플레이버, 키페어, limits)
-- [ ] Phase 1 Step 6: 통합 테스트
+- [x] Phase 1 Step 6: 통합 테스트 (22/22 통과, 소스 수정 없음)
 
 ---
 
