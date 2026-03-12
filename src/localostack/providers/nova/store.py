@@ -1,0 +1,1 @@
+"""Nova store — placeholder."""

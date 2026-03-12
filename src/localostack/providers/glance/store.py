@@ -1,0 +1,1 @@
+"""Glance store — placeholder."""
