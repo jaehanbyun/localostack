@@ -544,8 +544,8 @@ Step 6: 통합 테스트
 - [x] 에러 주입 (Mimic 패턴) — Admin API (port 9999) + FaultRegistry + 5개 서비스 미들웨어
 - [x] pause/suspend/rescue/shelve 확장 상태 전이 (Nova state machine 확장)
 - [x] Placement 서비스 (Nova 2.72+에서 필수) — resource providers, inventories, allocations, candidates (8 tests)
-- [ ] Heat (Orchestration)
-- [ ] 웹 대시보드 (Horizon 대체 경량 UI)
+- [x] Heat (Orchestration) — stacks, resources, events, resource_types (8 tests)
+- [x] 웹 대시보드 (Horizon 대체 경량 UI) — Admin port 9999 / 서비스 상태 카드 + 10초 자동갱신
 
 ---
 
