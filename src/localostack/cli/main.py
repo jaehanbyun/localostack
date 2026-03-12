@@ -11,6 +11,7 @@ from localostack.providers.nova.app import create_nova_app
 from localostack.providers.neutron.app import create_neutron_app
 from localostack.providers.glance.app import create_glance_app
 from localostack.providers.cinder.app import create_cinder_app
+from localostack.providers.placement.app import create_placement_app
 from localostack.admin.app import create_admin_app
 
 logging.basicConfig(
@@ -29,6 +30,7 @@ def main():
     logger.info(f"  Neutron:  {config.host}:{config.neutron_port}")
     logger.info(f"  Glance:   {config.host}:{config.glance_port}")
     logger.info(f"  Cinder:   {config.host}:{config.cinder_port}")
+    logger.info(f"  Placement: {config.host}:{config.placement_port}")
     logger.info(f"  Admin:    {config.host}:{config.admin_port}")
     if config.persistence != "memory":
         logger.info(f"  Persistence: {config.persistence} ({config.db_path})")
@@ -59,6 +61,7 @@ def main():
     server.add(create_neutron_app(admin_project_id=admin_project_id, backend=backend, fault_registry=registry), config.host, config.neutron_port, "neutron")
     server.add(create_glance_app(admin_project_id=admin_project_id, backend=backend, fault_registry=registry), config.host, config.glance_port, "glance")
     server.add(create_cinder_app(backend=backend, fault_registry=registry), config.host, config.cinder_port, "cinder")
+    server.add(create_placement_app(backend=backend, fault_registry=registry), config.host, config.placement_port, "placement")
     server.add(create_admin_app(registry), config.host, config.admin_port, "admin")
 
     try:

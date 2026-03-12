@@ -204,6 +204,7 @@ class KeystoneStore:
         neutron_port: int = 9696,
         glance_port: int = 9292,
         cinder_port: int = 8776,
+        placement_port: int = 8778,
     ):
         self._load_persisted()
 
@@ -266,6 +267,7 @@ class KeystoneStore:
             ("network", "neutron", f"{base}:{neutron_port}"),
             ("image", "glance", f"{base}:{glance_port}"),
             ("volumev3", "cinderv3", f"{base}:{cinder_port}/v3/{proj_id}"),
+            ("placement", "placement", f"{base}:{placement_port}"),
         ]
         for stype, sname, url in service_defs:
             svc = Service(id=self._uuid(), type=stype, name=sname)
