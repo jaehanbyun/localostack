@@ -1,5 +1,11 @@
-from fastapi import FastAPI
-from fastapi.responses import JSONResponse
+"""Nova (Compute Service) app factory."""
+
+from fastapi import FastAPI, Request
+
+from localostack.core.config import load_config
+
+from .routes import router, _AuthError
+from .store import NovaStore
 
 
 def create_nova_app() -> FastAPI:
@@ -8,6 +14,19 @@ def create_nova_app() -> FastAPI:
         description="Compute Service API v2.1",
         version="2.1",
     )
+
+    config = load_config()
+
+    store = NovaStore()
+    store.bootstrap()
+    app.state.nova_store = store
+    app.state.nova_config = config
+
+    app.include_router(router)
+
+    @app.exception_handler(_AuthError)
+    async def auth_error_handler(request: Request, exc: _AuthError):
+        return exc.response
 
     @app.middleware("http")
     async def add_microversion_headers(request, call_next):
