@@ -630,6 +630,12 @@ server = conn.compute.create_server(
 - [x] Phase 1 Step 5: Nova 구현 (서버 CRUD, 상태 머신, 플레이버, 키페어, limits)
 - [x] Phase 1 Step 6: 통합 테스트 (22/22 통과, 소스 수정 없음)
 - [x] Phase 1 Uncertainty 해소: tenant_id 불일치 수정 (Keystone UUID → Glance/Neutron 전파)
+- [x] Phase 2 #1: Dockerfile + docker-compose (two-stage uv build, 5-port mapping)
+- [x] Phase 2 #2: openstacksdk smoke test (16 tests — Keystone/Glance/Neutron/Nova/Cinder/Microversion)
+- [x] Phase 2 #3: Cinder block storage (Volume/Snapshot/VolumeType CRUD, RFC3339MilliNoZ timestamps)
+- [x] Phase 2 #4: Terraform compatibility test (openstack_compute_instance_v2 + openstack_blockstorage_volume_v3)
+- [x] Phase 2 #5: Nova microversion expansion (max=2.47, full flavor object at 2.47, networks required at 2.37)
+- [x] Phase 2 #6: SQLite persistence (LOCALOSTACK_PERSISTENCE=sqlite, all stores persist, skip bootstrap if already loaded)
 
 ---
 
@@ -642,11 +648,12 @@ server = conn.compute.create_server(
 | ~~Nova 상태 머신 동기/비동기~~ | 기본 동기(즉시 ACTIVE)가 moto/LocalStack 검증 패턴. 모든 주요 클라이언트 호환 확인 |
 | ~~Cross-service tenant_id 불일치~~ | CLI에서 Keystone 먼저 생성 → admin project UUID 추출 → Glance/Neutron bootstrap에 전달. 22/22 테스트 통과 |
 
-## Remaining Risks (Phase 2에서 확인)
+## Resolved Risks (Phase 2 검증 완료)
 
-| 항목 | 위험도 | 대응 방안 |
-|------|--------|-----------|
-| openstacksdk 실제 연동 | 중간 | Phase 2에서 openstacksdk dev 의존성 추가 후 smoke test |
-| Docker 이미지 빌드/실행 | 낮음 | Phase 2에서 Dockerfile 구현 |
-| Terraform OpenStack Provider 기본 마이크로버전 | 중간 | gophercloud 기반이며 높은 버전을 기본 요청할 수 있음. Phase 2 호환 테스트에서 확인 |
-| keystoneauth 디스커버리 폴백 동작 | 낮음 | `allow_version_hack` 설정 존재. Phase 2 openstacksdk 테스트로 확인 |
+| 항목 | 결과 |
+|------|------|
+| openstacksdk 실제 연동 | ✅ 16개 smoke test 통과 |
+| Docker 이미지 빌드/실행 | ✅ two-stage uv build 구현 |
+| Terraform 마이크로버전 호환 (Nova 2.47) | ✅ Terraform test PASSED — gophercloud가 full flavor object 정상 처리 |
+| keystoneauth 디스커버리 폴백 | ✅ 절대경로 links 반환으로 해결 |
+| SQLite SG embedded rules 복원 | ✅ asdict() 직렬화로 embedded list 완전 복원 확인 |
