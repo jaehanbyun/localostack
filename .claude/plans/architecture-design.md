@@ -629,6 +629,7 @@ server = conn.compute.create_server(
 - [x] Phase 1 Step 4: Neutron 구현 (네트워크/서브넷/포트/보안그룹 CRUD, MAC/IP 자동할당)
 - [x] Phase 1 Step 5: Nova 구현 (서버 CRUD, 상태 머신, 플레이버, 키페어, limits)
 - [x] Phase 1 Step 6: 통합 테스트 (22/22 통과, 소스 수정 없음)
+- [x] Phase 1 Uncertainty 해소: tenant_id 불일치 수정 (Keystone UUID → Glance/Neutron 전파)
 
 ---
 
@@ -639,12 +640,13 @@ server = conn.compute.create_server(
 | ~~Uvicorn 멀티 포트~~ | 네이티브 미지원이나 `asyncio.gather` + 커스텀 시그널 핸들러로 해결. 코드 패턴 확정 |
 | ~~마이크로버전 무시 가능 여부~~ | Nova 2.1, Cinder 3.0 보고 시 기본 CRUD 모두 호환. 디스커버리 엔드포인트 + 응답 헤더만 구현하면 됨 |
 | ~~Nova 상태 머신 동기/비동기~~ | 기본 동기(즉시 ACTIVE)가 moto/LocalStack 검증 패턴. 모든 주요 클라이언트 호환 확인 |
+| ~~Cross-service tenant_id 불일치~~ | CLI에서 Keystone 먼저 생성 → admin project UUID 추출 → Glance/Neutron bootstrap에 전달. 22/22 테스트 통과 |
 
-## Remaining Risks (실제 구현 시 확인 필요)
+## Remaining Risks (Phase 2에서 확인)
 
 | 항목 | 위험도 | 대응 방안 |
 |------|--------|-----------|
-| Uvicorn `server.serve()` 내부 시그널 충돌 | 낮음 | 커스텀 시그널 핸들러가 모든 서버에 `should_exit` 전파. 통합 테스트로 검증 |
-| openstacksdk의 `_max_microversion` 내부 값 | 중간 | 기본 Server 리소스는 2.1로 동작 확인. QuotaSet(2.56), ServerMigration(2.80) 등 고급 리소스는 MVP 스코프 밖 |
-| Terraform OpenStack Provider 기본 마이크로버전 | 중간 | gophercloud 기반이며 높은 버전을 기본 요청할 수 있음. Phase 1 통합 테스트에서 실제 확인 필요 |
-| keystoneauth 디스커버리 폴백 동작 | 낮음 | `allow_version_hack` 설정 존재. LocalOStack 환경에서의 동작은 통합 테스트로 확인 |
+| openstacksdk 실제 연동 | 중간 | Phase 2에서 openstacksdk dev 의존성 추가 후 smoke test |
+| Docker 이미지 빌드/실행 | 낮음 | Phase 2에서 Dockerfile 구현 |
+| Terraform OpenStack Provider 기본 마이크로버전 | 중간 | gophercloud 기반이며 높은 버전을 기본 요청할 수 있음. Phase 2 호환 테스트에서 확인 |
+| keystoneauth 디스커버리 폴백 동작 | 낮음 | `allow_version_hack` 설정 존재. Phase 2 openstacksdk 테스트로 확인 |
