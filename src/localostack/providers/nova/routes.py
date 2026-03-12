@@ -49,7 +49,24 @@ def _server_brief(srv) -> dict:
     }
 
 
-def _server_detail(srv) -> dict:
+def _get_microversion(request: Request) -> str:
+    return getattr(request.state, "nova_microversion", "2.1")
+
+
+def _microversion_ge(mv: str, target: str) -> bool:
+    try:
+        return tuple(int(x) for x in mv.split(".")) >= tuple(int(x) for x in target.split("."))
+    except ValueError:
+        return False
+
+
+def _server_detail(srv, store=None, microversion: str = "2.1") -> dict:
+    if store and _microversion_ge(microversion, "2.47"):
+        flavor_obj = store.get_flavor(srv.flavor_id)
+        flavor_field = _flavor_detail(flavor_obj) if flavor_obj else {"id": srv.flavor_id}
+    else:
+        flavor_field = {"id": srv.flavor_id}
+
     return {
         "id": srv.id,
         "name": srv.name,
@@ -57,7 +74,7 @@ def _server_detail(srv) -> dict:
         "tenant_id": srv.tenant_id,
         "user_id": srv.user_id,
         "image": {"id": srv.image_ref} if srv.image_ref else "",
-        "flavor": {"id": srv.flavor_id},
+        "flavor": flavor_field,
         "addresses": srv.addresses,
         "key_name": srv.key_name,
         "security_groups": srv.security_groups,
@@ -161,17 +178,22 @@ async def list_servers(request: Request):
 async def list_servers_detail(request: Request):
     _require_token(request)
     store = _get_store(request)
+    mv = _get_microversion(request)
     servers = store.list_servers()
-    return {"servers": [_server_detail(s) for s in servers]}
+    return {"servers": [_server_detail(s, store=store, microversion=mv) for s in servers]}
 
 
 @router.post("/v2.1/servers", status_code=202)
 async def create_server(request: Request):
     _require_token(request)
     store = _get_store(request)
+    mv = _get_microversion(request)
     body = await request.json()
     data = body.get("server", body)
     req = ServerCreateRequest(**data)
+    # 2.37+: networks is required
+    if _microversion_ge(mv, "2.37") and req.networks is None:
+        return _error(400, "networks is required for microversion 2.37+")
     srv = store.create_server(
         name=req.name,
         image_ref=req.imageRef,
@@ -191,16 +213,18 @@ async def create_server(request: Request):
 async def get_server(server_id: str, request: Request):
     _require_token(request)
     store = _get_store(request)
+    mv = _get_microversion(request)
     srv = store.get_server(server_id)
     if srv is None or srv.status == "DELETED":
         return _error(404, "Instance not found")
-    return {"server": _server_detail(srv)}
+    return {"server": _server_detail(srv, store=store, microversion=mv)}
 
 
 @router.put("/v2.1/servers/{server_id}")
 async def update_server(server_id: str, request: Request):
     _require_token(request)
     store = _get_store(request)
+    mv = _get_microversion(request)
     srv = store.get_server(server_id)
     if srv is None or srv.status == "DELETED":
         return _error(404, "Instance not found")
@@ -210,7 +234,7 @@ async def update_server(server_id: str, request: Request):
     if "name" in data:
         updates["name"] = data["name"]
     srv = store.update_server(server_id, **updates)
-    return {"server": _server_detail(srv)}
+    return {"server": _server_detail(srv, store=store, microversion=mv)}
 
 
 @router.delete("/v2.1/servers/{server_id}")
@@ -263,6 +287,15 @@ async def list_flavors_detail(request: Request):
     store = _get_store(request)
     flavors = store.list_flavors()
     return {"flavors": [_flavor_detail(f) for f in flavors]}
+
+
+@router.get("/v2.1/flavors/{flavor_id}/os-extra_specs")
+async def get_flavor_extra_specs(flavor_id: str, request: Request):
+    _require_token(request)
+    store = _get_store(request)
+    if store.get_flavor(flavor_id) is None:
+        return _error(404, "Flavor not found")
+    return {"extra_specs": {}}
 
 
 @router.get("/v2.1/flavors/{flavor_id}")

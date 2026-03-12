@@ -138,6 +138,83 @@ class TestNovaSDK:
         conn.compute.delete_server(server.id)
 
 
+class TestNovaMicroversion:
+    """Validate microversion negotiation and 2.47 flavor object behavior."""
+
+    def test_version_discovery_reports_max(self, server_process):
+        r = httpx.get(f"http://localhost:{NOVA_PORT}/")
+        assert r.status_code == 200
+        versions = r.json()["versions"]
+        v = versions[0]
+        assert v["version"] == "2.47"
+        assert v["min_version"] == "2.1"
+
+    def test_default_response_header_is_min_version(self, server_process, conn):
+        token = conn.auth_token
+        r = httpx.get(
+            f"http://localhost:{NOVA_PORT}/v2.1/flavors",
+            headers={"X-Auth-Token": token},
+        )
+        assert r.headers["X-OpenStack-Nova-API-Version"] == "2.1"
+
+    def test_echoes_requested_microversion(self, server_process, conn):
+        token = conn.auth_token
+        r = httpx.get(
+            f"http://localhost:{NOVA_PORT}/v2.1/flavors",
+            headers={"X-Auth-Token": token, "X-OpenStack-Nova-API-Version": "2.30"},
+        )
+        assert r.headers["X-OpenStack-Nova-API-Version"] == "2.30"
+
+    def test_latest_resolves_to_max(self, server_process, conn):
+        token = conn.auth_token
+        r = httpx.get(
+            f"http://localhost:{NOVA_PORT}/v2.1/flavors",
+            headers={"X-Auth-Token": token, "X-OpenStack-Nova-API-Version": "latest"},
+        )
+        assert r.headers["X-OpenStack-Nova-API-Version"] == "2.47"
+
+    def test_over_max_clamped_to_max(self, server_process, conn):
+        token = conn.auth_token
+        r = httpx.get(
+            f"http://localhost:{NOVA_PORT}/v2.1/flavors",
+            headers={"X-Auth-Token": token, "X-OpenStack-Nova-API-Version": "2.99"},
+        )
+        assert r.headers["X-OpenStack-Nova-API-Version"] == "2.47"
+
+    def test_flavor_id_only_at_microversion_2_1(self, server_process, conn):
+        images = list(conn.image.images())
+        server = conn.compute.create_server(name="mv-test-vm", flavor_id="1", image_id=images[0].id, networks="none")
+        token = conn.auth_token
+        try:
+            r = httpx.get(
+                f"http://localhost:{NOVA_PORT}/v2.1/servers/{server.id}",
+                headers={"X-Auth-Token": token, "X-OpenStack-Nova-API-Version": "2.1"},
+            )
+            assert r.status_code == 200
+            flavor = r.json()["server"]["flavor"]
+            assert "id" in flavor
+            assert "vcpus" not in flavor
+        finally:
+            conn.compute.delete_server(server.id)
+
+    def test_full_flavor_object_at_microversion_2_47(self, server_process, conn):
+        images = list(conn.image.images())
+        server = conn.compute.create_server(name="mv-test-vm-247", flavor_id="1", image_id=images[0].id, networks="none")
+        token = conn.auth_token
+        try:
+            r = httpx.get(
+                f"http://localhost:{NOVA_PORT}/v2.1/servers/{server.id}",
+                headers={"X-Auth-Token": token, "X-OpenStack-Nova-API-Version": "2.47"},
+            )
+            assert r.status_code == 200
+            flavor = r.json()["server"]["flavor"]
+            assert "vcpus" in flavor
+            assert "ram" in flavor
+            assert "disk" in flavor
+        finally:
+            conn.compute.delete_server(server.id)
+
+
 class TestCinderSDK:
     def test_list_volume_types(self, conn):
         types = list(conn.block_storage.types())

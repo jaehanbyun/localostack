@@ -7,6 +7,35 @@ from localostack.core.config import load_config
 from .routes import router, _AuthError
 from .store import NovaStore
 
+NOVA_MIN_MICROVERSION = "2.1"
+NOVA_MAX_MICROVERSION = "2.47"
+
+
+def _parse_microversion(request: Request) -> str:
+    """Return negotiated Nova microversion, clamped to [min, max]."""
+    header = request.headers.get("X-OpenStack-Nova-API-Version", "")
+    if not header:
+        oai = request.headers.get("OpenStack-API-Version", "")
+        if oai.startswith("compute "):
+            header = oai[len("compute "):].strip()
+
+    if not header:
+        return NOVA_MIN_MICROVERSION
+    if header == "latest":
+        return NOVA_MAX_MICROVERSION
+
+    try:
+        req = tuple(int(x) for x in header.split("."))
+        min_v = tuple(int(x) for x in NOVA_MIN_MICROVERSION.split("."))
+        max_v = tuple(int(x) for x in NOVA_MAX_MICROVERSION.split("."))
+        if req < min_v:
+            return NOVA_MIN_MICROVERSION
+        if req > max_v:
+            return NOVA_MAX_MICROVERSION
+        return header
+    except ValueError:
+        return NOVA_MIN_MICROVERSION
+
 
 def create_nova_app() -> FastAPI:
     app = FastAPI(
@@ -30,22 +59,25 @@ def create_nova_app() -> FastAPI:
 
     @app.middleware("http")
     async def add_microversion_headers(request, call_next):
+        mv = _parse_microversion(request)
+        request.state.nova_microversion = mv
         response = await call_next(request)
-        response.headers["X-OpenStack-Nova-API-Version"] = "2.1"
-        response.headers["OpenStack-API-Version"] = "compute 2.1"
+        response.headers["X-OpenStack-Nova-API-Version"] = mv
+        response.headers["OpenStack-API-Version"] = f"compute {mv}"
         response.headers["Vary"] = "X-OpenStack-Nova-API-Version, OpenStack-API-Version"
         return response
 
     @app.get("/")
-    async def version_discovery():
+    async def version_discovery(request: Request):
+        base = str(request.base_url).rstrip("/")
         return {
             "versions": [
                 {
                     "id": "v2.1",
                     "status": "CURRENT",
-                    "version": "2.1",
-                    "min_version": "2.1",
-                    "links": [{"rel": "self", "href": "/v2.1/"}],
+                    "version": NOVA_MAX_MICROVERSION,
+                    "min_version": NOVA_MIN_MICROVERSION,
+                    "links": [{"rel": "self", "href": f"{base}/v2.1/"}],
                 }
             ]
         }
