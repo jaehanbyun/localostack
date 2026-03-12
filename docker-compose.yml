@@ -1,0 +1,13 @@
+services:
+  localostack:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    ports:
+      - "5000:5000"
+      - "8774:8774"
+      - "9696:9696"
+      - "9292:9292"
+      - "8776:8776"
+    environment:
+      - LOCALOSTACK_HOST=0.0.0.0
