@@ -26,6 +26,10 @@ class ServiceConfig:
     persistence: str = "memory"  # "memory" | "sqlite"
     db_path: str = "/var/lib/localostack/state.db"
 
+    # Admin / Fault injection
+    admin_port: int = 9999
+    fault_rules_json: str = ""
+
 
 def load_config() -> ServiceConfig:
     """환경변수에서 설정을 로드한다."""
@@ -44,4 +48,6 @@ def load_config() -> ServiceConfig:
     config.server_build_steps = int(os.environ.get("LOCALOSTACK_SERVER_BUILD_STEPS", config.server_build_steps))
     config.persistence = os.environ.get("LOCALOSTACK_PERSISTENCE", config.persistence)
     config.db_path = os.environ.get("LOCALOSTACK_DB_PATH", config.db_path)
+    config.admin_port = int(os.environ.get("LOCALOSTACK_ADMIN_PORT", config.admin_port))
+    config.fault_rules_json = os.environ.get("LOCALOSTACK_FAULT_RULES", config.fault_rules_json)
     return config

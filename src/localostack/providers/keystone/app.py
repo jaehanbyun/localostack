@@ -9,7 +9,7 @@ from .routes import router, _AuthError
 from .store import KeystoneStore
 
 
-def create_keystone_app(backend=None) -> FastAPI:
+def create_keystone_app(backend=None, fault_registry=None) -> FastAPI:
     app = FastAPI(
         title="LocalOStack Keystone",
         description="Identity Service API v3",
@@ -39,6 +39,15 @@ def create_keystone_app(backend=None) -> FastAPI:
     @app.exception_handler(_AuthError)
     async def auth_error_handler(request: Request, exc: _AuthError):
         return exc.response
+
+    if fault_registry is not None:
+        _fr = fault_registry  # capture in closure
+        _svc = "keystone"     # service name string
+
+        @app.middleware("http")
+        async def _fault_mw(request, call_next):
+            from localostack.core.fault_injection import make_fault_middleware
+            return await make_fault_middleware(_fr, _svc)(request, call_next)
 
     @app.get("/")
     async def version_discovery(request: Request):

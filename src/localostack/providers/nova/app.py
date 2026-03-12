@@ -37,7 +37,7 @@ def _parse_microversion(request: Request) -> str:
         return NOVA_MIN_MICROVERSION
 
 
-def create_nova_app(backend=None) -> FastAPI:
+def create_nova_app(backend=None, fault_registry=None) -> FastAPI:
     app = FastAPI(
         title="LocalOStack Nova",
         description="Compute Service API v2.1",
@@ -66,6 +66,15 @@ def create_nova_app(backend=None) -> FastAPI:
         response.headers["OpenStack-API-Version"] = f"compute {mv}"
         response.headers["Vary"] = "X-OpenStack-Nova-API-Version, OpenStack-API-Version"
         return response
+
+    if fault_registry is not None:
+        _fr = fault_registry  # capture in closure
+        _svc = "nova"         # service name string
+
+        @app.middleware("http")
+        async def _fault_mw(request, call_next):
+            from localostack.core.fault_injection import make_fault_middleware
+            return await make_fault_middleware(_fr, _svc)(request, call_next)
 
     @app.get("/")
     async def version_discovery(request: Request):

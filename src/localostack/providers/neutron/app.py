@@ -5,7 +5,7 @@ from .routes import router, _AuthError
 from .store import NeutronStore
 
 
-def create_neutron_app(admin_project_id: str | None = None, backend=None) -> FastAPI:
+def create_neutron_app(admin_project_id: str | None = None, backend=None, fault_registry=None) -> FastAPI:
     app = FastAPI(
         title="LocalOStack Neutron",
         description="Networking Service API v2.0",
@@ -23,6 +23,15 @@ def create_neutron_app(admin_project_id: str | None = None, backend=None) -> Fas
     @app.exception_handler(_AuthError)
     async def auth_error_handler(request: Request, exc: _AuthError):
         return exc.response
+
+    if fault_registry is not None:
+        _fr = fault_registry  # capture in closure
+        _svc = "neutron"      # service name string
+
+        @app.middleware("http")
+        async def _fault_mw(request, call_next):
+            from localostack.core.fault_injection import make_fault_middleware
+            return await make_fault_middleware(_fr, _svc)(request, call_next)
 
     @app.get("/")
     async def version_discovery():
