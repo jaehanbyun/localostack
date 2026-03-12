@@ -126,9 +126,9 @@ class NovaStore:
         if security_groups is None:
             security_groups = [{"name": "default"}]
 
-        # addresses 구성
+        # addresses 구성 ("none"/"auto" 문자열은 빈 네트워크로 처리)
         addresses: dict = {}
-        if networks:
+        if networks and isinstance(networks, list):
             for net_info in networks:
                 network_name = net_info.get("uuid", "private")
                 addresses[network_name] = [

@@ -40,21 +40,29 @@ def create_keystone_app() -> FastAPI:
         return exc.response
 
     @app.get("/")
-    async def version_discovery():
+    async def version_discovery(request: Request):
+        base = str(request.base_url).rstrip("/")
         return {
             "versions": {
                 "values": [
                     {
                         "id": "v3.14",
                         "status": "stable",
-                        "links": [{"rel": "self", "href": "/v3/"}],
+                        "links": [{"rel": "self", "href": f"{base}/v3/"}],
                     }
                 ]
             }
         }
 
     @app.get("/v3")
-    async def v3_root():
-        return {"version": {"id": "v3.14", "status": "stable"}}
+    async def v3_root(request: Request):
+        base = str(request.base_url).rstrip("/")
+        return {
+            "version": {
+                "id": "v3.14",
+                "status": "stable",
+                "links": [{"rel": "self", "href": f"{base}/v3/"}],
+            }
+        }
 
     return app

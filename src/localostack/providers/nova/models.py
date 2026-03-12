@@ -15,7 +15,7 @@ class ServerCreateRequest(BaseModel):
     flavorRef: str = ""
     key_name: Optional[str] = None
     security_groups: list[dict] | None = None
-    networks: list[dict] | None = None
+    networks: list[dict] | str | None = None  # "none"/"auto" allowed (microversion 2.37+)
     metadata: dict | None = None
 
 
