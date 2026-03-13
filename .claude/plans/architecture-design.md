@@ -547,6 +547,14 @@ Step 6: 통합 테스트
 - [x] Heat (Orchestration) — stacks, resources, events, resource_types (8 tests)
 - [x] 웹 대시보드 (Horizon 대체 경량 UI) — Admin port 9999 / 서비스 상태 카드 + 10초 자동갱신
 
+### Phase 2 잔여 + Phase 4
+- [x] Swift (Object Storage, port 8080) — memory-only binary, container/object CRUD (8 tests)
+- [x] 멀티 리전 — LOCALOSTACK_REGION env var (1줄 수정)
+- [x] GitHub Actions CI — push/PR 시 pytest 자동 실행 (.github/workflows/test.yml)
+- [x] Docker Hub 자동 퍼블리시 — v* 태그 push 시 빌드+퍼블리시 (.github/workflows/docker.yml)
+- [x] Barbican (Key Manager, port 9311) — secret CRUD + payload 엔드포인트 (8 tests)
+- [x] Octavia (Load Balancer, port 9876) — LB/Listener/Pool/Member 계층형 CRUD (8 tests)
+
 ---
 
 ## 6. 포트 매핑
