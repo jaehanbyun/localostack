@@ -13,6 +13,7 @@ from localostack.providers.glance.app import create_glance_app
 from localostack.providers.cinder.app import create_cinder_app
 from localostack.providers.placement.app import create_placement_app
 from localostack.providers.heat.app import create_heat_app
+from localostack.providers.swift.app import create_swift_app
 from localostack.admin.app import create_admin_app
 
 logging.basicConfig(
@@ -33,6 +34,7 @@ def main():
     logger.info(f"  Cinder:   {config.host}:{config.cinder_port}")
     logger.info(f"  Placement: {config.host}:{config.placement_port}")
     logger.info(f"  Heat:     {config.host}:{config.heat_port}")
+    logger.info(f"  Swift:    {config.host}:{config.swift_port}")
     logger.info(f"  Admin:    {config.host}:{config.admin_port}")
     if config.persistence != "memory":
         logger.info(f"  Persistence: {config.persistence} ({config.db_path})")
@@ -65,6 +67,7 @@ def main():
     server.add(create_cinder_app(backend=backend, fault_registry=registry), config.host, config.cinder_port, "cinder")
     server.add(create_placement_app(backend=backend, fault_registry=registry), config.host, config.placement_port, "placement")
     server.add(create_heat_app(backend=backend, fault_registry=registry), config.host, config.heat_port, "heat")
+    server.add(create_swift_app(backend=backend, fault_registry=registry), config.host, config.swift_port, "swift")
     server.add(create_admin_app(registry, config=config), config.host, config.admin_port, "admin")
 
     try:
