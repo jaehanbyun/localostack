@@ -10,10 +10,13 @@ from .store import KeystoneStore, User, Project, Role, RoleAssignment
 router = APIRouter()
 
 
+_HTTP_TITLES = {400: "Bad Request", 401: "Unauthorized", 403: "Forbidden", 404: "Not Found", 409: "Conflict"}
+
+
 def _error(code: int, message: str) -> JSONResponse:
     return JSONResponse(
         status_code=code,
-        content={"error": {"message": message, "code": code}},
+        content={"error": {"message": message, "code": code, "title": _HTTP_TITLES.get(code, "Error")}},
     )
 
 
@@ -29,11 +32,15 @@ class _AuthError(Exception):
 def _require_token(request: Request) -> str:
     token_id = request.headers.get("X-Auth-Token")
     if not token_id:
-        raise _AuthError(_error(401, "Authentication required"))
+        auth_header = request.headers.get("Authorization", "")
+        if auth_header.startswith("Bearer "):
+            token_id = auth_header[7:]
+    if not token_id:
+        raise _AuthError(_error(401, "The request you have made requires authentication."))
     store = _get_store(request)
     token = store.validate_token(token_id)
     if token is None:
-        raise _AuthError(_error(401, "Invalid or expired token"))
+        raise _AuthError(_error(401, "The provided token is not valid."))
     return token_id
 
 
