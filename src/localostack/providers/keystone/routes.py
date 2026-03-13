@@ -199,6 +199,30 @@ async def get_catalog(request: Request):
     return {"catalog": store.build_catalog()}
 
 
+@router.get("/v3/auth/projects")
+async def get_auth_projects(request: Request):
+    token_id = _require_token(request)
+    store = _get_store(request)
+    token = store.tokens.get(token_id) if token_id else None
+    projects = [
+        {"id": p.id, "name": p.name, "domain_id": p.domain_id, "enabled": p.enabled}
+        for p in store.projects.values()
+        if p.enabled
+    ]
+    return {"projects": projects}
+
+
+@router.get("/v3/auth/domains")
+async def get_auth_domains(request: Request):
+    _require_token(request)
+    store = _get_store(request)
+    domains = [
+        {"id": d.id, "name": d.name, "enabled": d.enabled}
+        for d in store.domains.values()
+    ]
+    return {"domains": domains}
+
+
 # ── Users ────────────────────────────────────────────────
 
 @router.get("/v3/users")
