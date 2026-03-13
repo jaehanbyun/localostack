@@ -23,8 +23,9 @@ def _require_token(request: Request) -> str:
 # ── Capabilities ──────────────────────────────────────────────────────
 
 @router.get("/")
-async def version_discovery():
-    return {"versions": [{"id": "v1", "status": "CURRENT"}]}
+async def version_discovery(request: Request):
+    base = str(request.base_url).rstrip("/")
+    return {"versions": [{"id": "v1", "status": "CURRENT", "links": [{"rel": "self", "href": f"{base}/v1/"}]}]}
 
 
 @router.get("/info")

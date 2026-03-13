@@ -1,7 +1,7 @@
 """Octavia Load Balancer API app factory."""
 from __future__ import annotations
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 
 from .routes import router
 from .store import OctaviaStore
@@ -21,12 +21,14 @@ def create_octavia_app(backend=None, fault_registry=None) -> FastAPI:
     app.state.octavia_store = store
 
     @app.get("/")
-    async def version_discovery():
+    async def version_discovery(request: Request):
+        base = str(request.base_url).rstrip("/")
         return {
             "versions": [
                 {
                     "id": "v2.0",
                     "status": "CURRENT",
+                    "links": [{"rel": "self", "href": f"{base}/v2/"}],
                 }
             ]
         }
