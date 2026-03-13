@@ -1,0 +1,1011 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LocalOStack — Local OpenStack API Emulator</title>
+  <meta name="description" content="Run 10 OpenStack APIs locally in seconds. Zero config, full API fidelity." />
+  <meta property="og:title" content="LocalOStack" />
+  <meta property="og:description" content="Local OpenStack API Emulator for development and CI/CD testing." />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #0d1117;
+      --bg2:       #161b22;
+      --bg3:       #21262d;
+      --border:    #30363d;
+      --text:      #c9d1d9;
+      --text-dim:  #8b949e;
+      --accent:    #58a6ff;
+      --accent2:   #1f6feb;
+      --green:     #3fb950;
+      --purple:    #bc8cff;
+      --orange:    #e3b341;
+      --red:       #f85149;
+      --cyan:      #39d353;
+      --radius:    8px;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.6;
+      font-size: 15px;
+    }
+
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    /* ── Nav ──────────────────────────────────── */
+    nav {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(13,17,23,.92);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      padding: 0 2rem;
+      height: 60px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .nav-brand { font-weight: 700; font-size: 1.1rem; color: #fff; display: flex; align-items: center; gap: .5rem; }
+    .nav-brand .badge {
+      font-size: .65rem; font-weight: 600; padding: 2px 7px;
+      background: var(--accent2); color: #fff; border-radius: 20px;
+      letter-spacing: .03em; text-transform: uppercase;
+    }
+    .nav-links { display: flex; align-items: center; gap: 1.5rem; }
+    .nav-links a { color: var(--text-dim); font-size: .9rem; transition: color .15s; }
+    .nav-links a:hover { color: var(--text); text-decoration: none; }
+    .lang-switcher {
+      display: flex; gap: 4px; background: var(--bg3);
+      border: 1px solid var(--border); border-radius: 6px; padding: 3px;
+    }
+    .lang-btn {
+      padding: 3px 10px; border-radius: 4px; border: none; cursor: pointer;
+      font-size: .8rem; font-weight: 600; background: transparent;
+      color: var(--text-dim); transition: all .15s;
+    }
+    .lang-btn.active { background: var(--accent2); color: #fff; }
+
+    /* ── Hero ─────────────────────────────────── */
+    .hero {
+      max-width: 900px; margin: 0 auto;
+      padding: 5rem 2rem 4rem;
+      text-align: center;
+    }
+    .hero-eyebrow {
+      display: inline-flex; align-items: center; gap: .5rem;
+      background: rgba(88,166,255,.08); border: 1px solid rgba(88,166,255,.2);
+      padding: 4px 14px; border-radius: 20px;
+      font-size: .8rem; color: var(--accent); margin-bottom: 1.5rem;
+    }
+    .hero-eyebrow::before { content: "●"; font-size: .5rem; color: var(--green); }
+    h1 {
+      font-size: clamp(2.4rem, 6vw, 3.6rem);
+      font-weight: 800; letter-spacing: -.03em; color: #fff;
+      line-height: 1.1; margin-bottom: 1.25rem;
+    }
+    h1 span { color: var(--accent); }
+    .hero-sub {
+      font-size: 1.15rem; color: var(--text-dim);
+      max-width: 600px; margin: 0 auto 2.5rem;
+    }
+    .hero-actions { display: flex; gap: .75rem; justify-content: center; flex-wrap: wrap; }
+    .btn {
+      padding: .65rem 1.5rem; border-radius: var(--radius);
+      font-size: .9rem; font-weight: 600; cursor: pointer;
+      transition: all .15s; border: 1px solid transparent;
+      display: inline-flex; align-items: center; gap: .4rem;
+    }
+    .btn-primary {
+      background: var(--accent2); color: #fff; border-color: var(--accent2);
+    }
+    .btn-primary:hover { background: #388bfd; text-decoration: none; }
+    .btn-outline {
+      background: transparent; color: var(--text);
+      border-color: var(--border);
+    }
+    .btn-outline:hover { background: var(--bg3); text-decoration: none; border-color: #6e7681; }
+
+    /* ── Quick command ─────────────────────────── */
+    .hero-cmd {
+      margin: 2rem auto 0; max-width: 620px;
+      background: var(--bg2); border: 1px solid var(--border);
+      border-radius: var(--radius); overflow: hidden;
+    }
+    .hero-cmd-bar {
+      background: var(--bg3); padding: .45rem 1rem;
+      display: flex; align-items: center; gap: .5rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .hero-cmd-bar .dot { width: 10px; height: 10px; border-radius: 50%; }
+    .hero-cmd-bar span { font-size: .75rem; color: var(--text-dim); margin-left: auto; cursor: pointer; user-select: none; }
+    .hero-cmd-bar span:hover { color: var(--text); }
+    .hero-cmd code {
+      display: block; padding: 1.1rem 1.2rem;
+      font-family: "SFMono-Regular", Consolas, monospace;
+      font-size: .85rem; color: var(--text); white-space: pre; overflow-x: auto;
+    }
+    .hero-cmd code .kw { color: var(--cyan); }
+    .hero-cmd code .flag { color: var(--purple); }
+    .hero-cmd code .val { color: var(--orange); }
+
+    /* ── Features strip ───────────────────────── */
+    .features-strip {
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      background: var(--bg2);
+      padding: 2.5rem 2rem;
+    }
+    .features-strip-inner {
+      max-width: 1100px; margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 1.5rem;
+    }
+    .feat-item { text-align: center; }
+    .feat-icon { font-size: 1.6rem; margin-bottom: .4rem; }
+    .feat-title { font-size: .85rem; font-weight: 600; color: #fff; margin-bottom: .2rem; }
+    .feat-desc { font-size: .78rem; color: var(--text-dim); }
+
+    /* ── Section ──────────────────────────────── */
+    section { padding: 4rem 2rem; }
+    .container { max-width: 1100px; margin: 0 auto; }
+    .section-label {
+      font-size: .75rem; font-weight: 700; letter-spacing: .12em;
+      text-transform: uppercase; color: var(--accent); margin-bottom: .75rem;
+    }
+    h2 { font-size: 1.8rem; font-weight: 700; color: #fff; margin-bottom: .75rem; letter-spacing: -.02em; }
+    .section-sub { color: var(--text-dim); max-width: 560px; margin-bottom: 2.5rem; }
+
+    /* ── Services grid ────────────────────────── */
+    .services-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 1rem;
+    }
+    .svc-card {
+      background: var(--bg2); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 1.2rem 1.4rem;
+      transition: border-color .15s, box-shadow .15s;
+    }
+    .svc-card:hover {
+      border-color: var(--accent2);
+      box-shadow: 0 0 0 1px rgba(31,111,235,.3);
+    }
+    .svc-header { display: flex; align-items: center; gap: .75rem; margin-bottom: .6rem; }
+    .svc-icon { font-size: 1.3rem; }
+    .svc-name { font-weight: 700; color: #fff; font-size: .95rem; }
+    .svc-port {
+      margin-left: auto; font-size: .75rem; font-family: monospace;
+      background: var(--bg3); border: 1px solid var(--border);
+      padding: 2px 8px; border-radius: 4px; color: var(--text-dim);
+    }
+    .svc-desc { font-size: .82rem; color: var(--text-dim); margin-bottom: .75rem; }
+    .svc-tags { display: flex; flex-wrap: wrap; gap: .35rem; }
+    .tag {
+      font-size: .7rem; padding: 2px 8px; border-radius: 12px;
+      font-weight: 500;
+    }
+    .tag-blue { background: rgba(88,166,255,.12); color: var(--accent); border: 1px solid rgba(88,166,255,.2); }
+    .tag-green { background: rgba(63,185,80,.12); color: var(--green); border: 1px solid rgba(63,185,80,.2); }
+    .tag-purple { background: rgba(188,140,255,.12); color: var(--purple); border: 1px solid rgba(188,140,255,.2); }
+    .tag-orange { background: rgba(227,179,65,.12); color: var(--orange); border: 1px solid rgba(227,179,65,.2); }
+
+    /* ── Quickstart steps ─────────────────────── */
+    .steps { display: flex; flex-direction: column; gap: 1.5rem; }
+    .step { display: flex; gap: 1.2rem; align-items: flex-start; }
+    .step-num {
+      min-width: 32px; height: 32px;
+      background: var(--accent2); color: #fff;
+      border-radius: 50%; display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: .85rem; flex-shrink: 0; margin-top: 2px;
+    }
+    .step-body { flex: 1; }
+    .step-title { font-weight: 600; color: #fff; margin-bottom: .5rem; }
+    .step-desc { font-size: .85rem; color: var(--text-dim); margin-bottom: .75rem; }
+
+    /* ── Code block ───────────────────────────── */
+    .code-block {
+      background: var(--bg2); border: 1px solid var(--border);
+      border-radius: var(--radius); overflow: hidden; position: relative;
+    }
+    .code-block-header {
+      background: var(--bg3); padding: .45rem 1rem;
+      display: flex; align-items: center; justify-content: space-between;
+      border-bottom: 1px solid var(--border);
+      font-size: .75rem; color: var(--text-dim);
+    }
+    .copy-btn {
+      background: none; border: none; cursor: pointer;
+      color: var(--text-dim); font-size: .75rem; padding: 2px 6px;
+      border-radius: 4px; transition: all .15s;
+    }
+    .copy-btn:hover { background: var(--bg); color: var(--text); }
+    .code-block pre {
+      padding: 1rem 1.2rem; overflow-x: auto;
+      font-family: "SFMono-Regular", Consolas, monospace;
+      font-size: .82rem; line-height: 1.7; color: var(--text);
+    }
+    .code-block pre .c  { color: var(--text-dim); }
+    .code-block pre .kw { color: #ff7b72; }
+    .code-block pre .s  { color: var(--orange); }
+    .code-block pre .k  { color: var(--purple); }
+    .code-block pre .v  { color: var(--cyan); }
+    .code-block pre .cm { color: var(--text-dim); font-style: italic; }
+
+    /* ── Config table ─────────────────────────── */
+    .config-table { width: 100%; border-collapse: collapse; }
+    .config-table th {
+      text-align: left; font-size: .78rem; font-weight: 600;
+      color: var(--text-dim); padding: .6rem 1rem;
+      background: var(--bg2); border-bottom: 1px solid var(--border);
+      text-transform: uppercase; letter-spacing: .05em;
+    }
+    .config-table td {
+      padding: .65rem 1rem; font-size: .82rem;
+      border-bottom: 1px solid var(--border);
+      vertical-align: top;
+    }
+    .config-table tr:last-child td { border-bottom: none; }
+    .config-table tr:hover td { background: rgba(255,255,255,.02); }
+    .config-table td:first-child {
+      font-family: monospace; font-size: .8rem; color: var(--purple);
+      white-space: nowrap;
+    }
+    .config-table td:nth-child(2) {
+      font-family: monospace; font-size: .8rem; color: var(--orange);
+      white-space: nowrap;
+    }
+    .config-group {
+      background: var(--bg2); border: 1px solid var(--border);
+      border-radius: var(--radius); overflow: hidden; margin-bottom: 1.5rem;
+    }
+    .config-group-title {
+      padding: .7rem 1rem; background: var(--bg3);
+      border-bottom: 1px solid var(--border);
+      font-size: .78rem; font-weight: 600; color: var(--text-dim);
+      text-transform: uppercase; letter-spacing: .07em;
+    }
+
+    /* ── Compat badges ────────────────────────── */
+    .compat-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: .75rem;
+    }
+    .compat-card {
+      background: var(--bg2); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 1rem 1.2rem;
+      display: flex; align-items: center; gap: .75rem;
+    }
+    .compat-icon { font-size: 1.4rem; }
+    .compat-name { font-weight: 600; font-size: .9rem; color: #fff; }
+    .compat-note { font-size: .75rem; color: var(--text-dim); }
+
+    /* ── Divider ──────────────────────────────── */
+    .divider { border: none; border-top: 1px solid var(--border); }
+
+    /* ── Footer ───────────────────────────────── */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 2rem;
+      text-align: center;
+      font-size: .82rem; color: var(--text-dim);
+    }
+    footer a { color: var(--text-dim); }
+    footer a:hover { color: var(--text); }
+
+    /* ── Tabs ─────────────────────────────────── */
+    .tab-group { margin-bottom: 1rem; display: flex; gap: .35rem; }
+    .tab {
+      padding: .4rem 1rem; border-radius: 6px; cursor: pointer;
+      font-size: .83rem; font-weight: 500; border: 1px solid transparent;
+      background: transparent; color: var(--text-dim); transition: all .15s;
+    }
+    .tab.active { background: var(--bg2); color: var(--text); border-color: var(--border); }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    /* ── Responsive ───────────────────────────── */
+    @media (max-width: 640px) {
+      nav { padding: 0 1rem; }
+      .nav-links a:not(:last-child) { display: none; }
+      section { padding: 3rem 1rem; }
+      .hero { padding: 3.5rem 1rem 3rem; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── Navigation ─────────────────────────────────────────────────── -->
+<nav>
+  <div class="nav-brand">
+    <span>⚡ LocalOStack</span>
+    <span class="badge">v0.1</span>
+  </div>
+  <div class="nav-links">
+    <a href="#services"  data-en="Services"  data-ko="서비스">Services</a>
+    <a href="#quickstart" data-en="Quick Start" data-ko="빠른 시작">Quick Start</a>
+    <a href="#config"    data-en="Config"     data-ko="설정">Config</a>
+    <a href="https://github.com/byeonjaehan/localostack" target="_blank">GitHub ↗</a>
+    <div class="lang-switcher">
+      <button class="lang-btn active" onclick="setLang('en')">EN</button>
+      <button class="lang-btn"        onclick="setLang('ko')">한국어</button>
+    </div>
+  </div>
+</nav>
+
+<!-- ── Hero ───────────────────────────────────────────────────────── -->
+<div class="hero">
+  <div class="hero-eyebrow"
+    data-en="Open Source · MIT License"
+    data-ko="오픈 소스 · MIT 라이선스">
+    Open Source · MIT License
+  </div>
+
+  <h1>
+    <span data-en="Local" data-ko="로컬에서 실행하는">Local</span>
+    <span class="accent-text" style="color:var(--accent);"> OpenStack</span><br/>
+    <span data-en="for Developers" data-ko="개발자를 위한 OpenStack">for Developers</span>
+  </h1>
+
+  <p class="hero-sub"
+    data-en="Spin up 10 OpenStack APIs locally in seconds. Full API fidelity — no cloud account required. Perfect for CI/CD pipelines, local testing, and Terraform development."
+    data-ko="10개의 OpenStack API를 로컬에서 즉시 실행하세요. 실제 OpenStack과 동일한 API 응답을 제공합니다. CI/CD 파이프라인, 로컬 테스트, Terraform 개발에 최적화되어 있습니다.">
+    Spin up 10 OpenStack APIs locally in seconds. Full API fidelity — no cloud account required. Perfect for CI/CD pipelines, local testing, and Terraform development.
+  </p>
+
+  <div class="hero-actions">
+    <a class="btn btn-primary" href="#quickstart"
+      data-en="→ Quick Start" data-ko="→ 빠른 시작">→ Quick Start</a>
+    <a class="btn btn-outline" href="https://github.com/byeonjaehan/localostack" target="_blank"
+      data-en="⭐ GitHub" data-ko="⭐ GitHub">⭐ GitHub</a>
+    <a class="btn btn-outline" href="#services"
+      data-en="View Services" data-ko="서비스 목록">View Services</a>
+  </div>
+
+  <div class="hero-cmd">
+    <div class="hero-cmd-bar">
+      <div class="dot" style="background:#ff5f56"></div>
+      <div class="dot" style="background:#ffbd2e; margin-left:4px"></div>
+      <div class="dot" style="background:#27c93f; margin-left:4px"></div>
+      <span onclick="copyHeroCmd(this)"
+        data-en="Copy" data-ko="복사">Copy</span>
+    </div>
+    <code id="hero-cmd-code"><span class="kw">docker</span> run <span class="flag">--rm</span> \
+  <span class="flag">-p</span> <span class="val">5000:5000</span>   <span class="c"># Keystone</span>
+  <span class="flag">-p</span> <span class="val">8774:8774</span>   <span class="c"># Nova</span>
+  <span class="flag">-p</span> <span class="val">9696:9696</span>   <span class="c"># Neutron</span>
+  <span class="flag">-p</span> <span class="val">9292:9292</span>   <span class="c"># Glance</span>
+  <span class="flag">-p</span> <span class="val">9999:9999</span>   <span class="c"># Admin</span>
+  localostack/localostack:latest</code>
+  </div>
+</div>
+
+<!-- ── Feature Strip ───────────────────────────────────────────────── -->
+<div class="features-strip">
+  <div class="features-strip-inner">
+    <div class="feat-item">
+      <div class="feat-icon">⚡</div>
+      <div class="feat-title" data-en="Zero Config" data-ko="설정 불필요">Zero Config</div>
+      <div class="feat-desc" data-en="Works out of the box" data-ko="바로 실행 가능">Works out of the box</div>
+    </div>
+    <div class="feat-item">
+      <div class="feat-icon">🧩</div>
+      <div class="feat-title" data-en="10 Services" data-ko="10개 서비스">10 Services</div>
+      <div class="feat-desc" data-en="Full OpenStack stack" data-ko="완전한 OpenStack 스택">Full OpenStack stack</div>
+    </div>
+    <div class="feat-item">
+      <div class="feat-icon">🎯</div>
+      <div class="feat-title" data-en="API Fidelity" data-ko="높은 API 호환성">API Fidelity</div>
+      <div class="feat-desc" data-en="SDK & Terraform compatible" data-ko="SDK·Terraform 호환">SDK &amp; Terraform compatible</div>
+    </div>
+    <div class="feat-item">
+      <div class="feat-icon">💥</div>
+      <div class="feat-title" data-en="Fault Injection" data-ko="장애 주입">Fault Injection</div>
+      <div class="feat-desc" data-en="Simulate real failures" data-ko="실제 장애 시나리오 재현">Simulate real failures</div>
+    </div>
+    <div class="feat-item">
+      <div class="feat-icon">💾</div>
+      <div class="feat-title" data-en="Persistence" data-ko="데이터 영속성">Persistence</div>
+      <div class="feat-desc" data-en="SQLite or in-memory" data-ko="SQLite / 인메모리 지원">SQLite or in-memory</div>
+    </div>
+    <div class="feat-item">
+      <div class="feat-icon">🌍</div>
+      <div class="feat-title" data-en="Multi-Region" data-ko="멀티 리전">Multi-Region</div>
+      <div class="feat-desc" data-en="LOCALOSTACK_REGION" data-ko="리전 커스터마이징 지원">LOCALOSTACK_REGION</div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Services ────────────────────────────────────────────────────── -->
+<section id="services">
+  <div class="container">
+    <div class="section-label" data-en="SERVICES" data-ko="서비스">SERVICES</div>
+    <h2 data-en="10 OpenStack APIs, One Container" data-ko="하나의 컨테이너에서 10개의 OpenStack API를">10 OpenStack APIs, One Container</h2>
+    <p class="section-sub"
+      data-en="Every service runs in a single process, sharing one asyncio event loop for minimal resource usage."
+      data-ko="모든 서비스는 단일 프로세스에서 asyncio 이벤트 루프를 공유해 최소한의 리소스로 실행됩니다.">
+      Every service runs in a single process, sharing one asyncio event loop for minimal resource usage.
+    </p>
+    <div class="services-grid">
+
+      <div class="svc-card">
+        <div class="svc-header">
+          <span class="svc-icon">🔑</span>
+          <span class="svc-name">Keystone</span>
+          <span class="svc-port">:5000</span>
+        </div>
+        <p class="svc-desc" data-en="Identity &amp; auth service. Token issuance, service catalog, users, projects, roles." data-ko="인증 서비스. 토큰 발급, 서비스 카탈로그, 사용자·프로젝트·역할 관리.">Identity &amp; auth service. Token issuance, service catalog, users, projects, roles.</p>
+        <div class="svc-tags">
+          <span class="tag tag-blue">v3</span>
+          <span class="tag tag-green">Auth</span>
+          <span class="tag tag-purple">Catalog</span>
+        </div>
+      </div>
+
+      <div class="svc-card">
+        <div class="svc-header">
+          <span class="svc-icon">🖥️</span>
+          <span class="svc-name">Nova</span>
+          <span class="svc-port">:8774</span>
+        </div>
+        <p class="svc-desc" data-en="Compute service. Server CRUD, flavors, keypairs, state machine, microversions up to 2.47." data-ko="컴퓨트 서비스. 서버 CRUD, 플레이버, 키페어, 상태 머신, 마이크로버전 2.47 지원.">Compute service. Server CRUD, flavors, keypairs, state machine, microversions up to 2.47.</p>
+        <div class="svc-tags">
+          <span class="tag tag-blue">v2.1</span>
+          <span class="tag tag-green">Microversion</span>
+          <span class="tag tag-orange">State Machine</span>
+        </div>
+      </div>
+
+      <div class="svc-card">
+        <div class="svc-header">
+          <span class="svc-icon">🌐</span>
+          <span class="svc-name">Neutron</span>
+          <span class="svc-port">:9696</span>
+        </div>
+        <p class="svc-desc" data-en="Network service. Networks, subnets, ports, security groups, MAC/IP auto-assignment." data-ko="네트워크 서비스. 네트워크·서브넷·포트·보안그룹 CRUD, MAC/IP 자동 할당.">Network service. Networks, subnets, ports, security groups, MAC/IP auto-assignment.</p>
+        <div class="svc-tags">
+          <span class="tag tag-blue">v2.0</span>
+          <span class="tag tag-green">Security Groups</span>
+        </div>
+      </div>
+
+      <div class="svc-card">
+        <div class="svc-header">
+          <span class="svc-icon">🖼️</span>
+          <span class="svc-name">Glance</span>
+          <span class="svc-port">:9292</span>
+        </div>
+        <p class="svc-desc" data-en="Image service. Image metadata CRUD, file upload/download, cirros pre-loaded." data-ko="이미지 서비스. 메타데이터 CRUD, 파일 업/다운로드, cirros 사전 탑재.">Image service. Image metadata CRUD, file upload/download, cirros pre-loaded.</p>
+        <div class="svc-tags">
+          <span class="tag tag-blue">v2</span>
+          <span class="tag tag-purple">cirros-0.6.2</span>
+        </div>
+      </div>
+
+      <div class="svc-card">
+        <div class="svc-header">
+          <span class="svc-icon">💿</span>
+          <span class="svc-name">Cinder</span>
+          <span class="svc-port">:8776</span>
+        </div>
+        <p class="svc-desc" data-en="Block storage. Volume &amp; snapshot CRUD, volume types, RFC3339 timestamps." data-ko="블록 스토리지. 볼륨·스냅샷 CRUD, 볼륨 타입, RFC3339 타임스탬프.">Block storage. Volume &amp; snapshot CRUD, volume types, RFC3339 timestamps.</p>
+        <div class="svc-tags">
+          <span class="tag tag-blue">v3</span>
+          <span class="tag tag-orange">Snapshots</span>
+        </div>
+      </div>
+
+      <div class="svc-card">
+        <div class="svc-header">
+          <span class="svc-icon">📐</span>
+          <span class="svc-name">Placement</span>
+          <span class="svc-port">:8778</span>
+        </div>
+        <p class="svc-desc" data-en="Resource placement. Providers, inventories, allocations, allocation candidates." data-ko="리소스 배치. 프로바이더, 인벤토리, 할당, 후보 조회.">Resource placement. Providers, inventories, allocations, allocation candidates.</p>
+        <div class="svc-tags">
+          <span class="tag tag-blue">v1.0</span>
+          <span class="tag tag-green">10K VCPUs</span>
+        </div>
+      </div>
+
+      <div class="svc-card">
+        <div class="svc-header">
+          <span class="svc-icon">🔥</span>
+          <span class="svc-name">Heat</span>
+          <span class="svc-port">:8004</span>
+        </div>
+        <p class="svc-desc" data-en="Orchestration. Stack CRUD, HOT template parsing, resource &amp; event listing." data-ko="오케스트레이션. 스택 CRUD, HOT 템플릿 파싱, 리소스·이벤트 조회.">Orchestration. Stack CRUD, HOT template parsing, resource &amp; event listing.</p>
+        <div class="svc-tags">
+          <span class="tag tag-blue">v1</span>
+          <span class="tag tag-purple">HOT Templates</span>
+        </div>
+      </div>
+
+      <div class="svc-card">
+        <div class="svc-header">
+          <span class="svc-icon">📦</span>
+          <span class="svc-name">Swift</span>
+          <span class="svc-port">:8080</span>
+        </div>
+        <p class="svc-desc" data-en="Object storage. Account/container/object CRUD, in-memory binary storage, ETag." data-ko="오브젝트 스토리지. 계정·컨테이너·오브젝트 CRUD, 인메모리 바이너리, ETag.">Object storage. Account/container/object CRUD, in-memory binary storage, ETag.</p>
+        <div class="svc-tags">
+          <span class="tag tag-blue">v1</span>
+          <span class="tag tag-green">ETag / MD5</span>
+        </div>
+      </div>
+
+      <div class="svc-card">
+        <div class="svc-header">
+          <span class="svc-icon">🔐</span>
+          <span class="svc-name">Barbican</span>
+          <span class="svc-port">:9311</span>
+        </div>
+        <p class="svc-desc" data-en="Secret management. Secret CRUD, payload retrieval, secret_ref URL responses." data-ko="시크릿 관리. 시크릿 CRUD, 페이로드 조회, secret_ref URL 응답.">Secret management. Secret CRUD, payload retrieval, secret_ref URL responses.</p>
+        <div class="svc-tags">
+          <span class="tag tag-blue">v1</span>
+          <span class="tag tag-orange">Secrets</span>
+        </div>
+      </div>
+
+      <div class="svc-card">
+        <div class="svc-header">
+          <span class="svc-icon">⚖️</span>
+          <span class="svc-name">Octavia</span>
+          <span class="svc-port">:9876</span>
+        </div>
+        <p class="svc-desc" data-en="Load balancing. LoadBalancer → Listener → Pool → Member hierarchy, LBaaS v2." data-ko="로드 밸런싱. LB → Listener → Pool → Member 계층 CRUD, LBaaS v2.">Load balancing. LoadBalancer → Listener → Pool → Member hierarchy, LBaaS v2.</p>
+        <div class="svc-tags">
+          <span class="tag tag-blue">v2</span>
+          <span class="tag tag-purple">LBaaS</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<hr class="divider" />
+
+<!-- ── Quick Start ─────────────────────────────────────────────────── -->
+<section id="quickstart">
+  <div class="container">
+    <div class="section-label" data-en="QUICK START" data-ko="빠른 시작">QUICK START</div>
+    <h2 data-en="Up and running in 3 steps" data-ko="3단계로 바로 시작">Up and running in 3 steps</h2>
+    <p class="section-sub"
+      data-en="No OpenStack installation. No configuration files. Just Docker."
+      data-ko="OpenStack 설치 불필요. 설정 파일 불필요. Docker만 있으면 됩니다.">
+      No OpenStack installation. No configuration files. Just Docker.
+    </p>
+
+    <div class="steps">
+
+      <!-- Step 1 -->
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <div class="step-title" data-en="Start LocalOStack" data-ko="LocalOStack 시작">Start LocalOStack</div>
+          <p class="step-desc"
+            data-en="Pull and run the container. All 10 services start automatically."
+            data-ko="컨테이너를 실행하면 10개의 서비스가 자동으로 시작됩니다.">
+            Pull and run the container. All 10 services start automatically.
+          </p>
+          <div class="code-block">
+            <div class="code-block-header">
+              <span>bash</span>
+              <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+            </div>
+            <pre>docker run --rm \
+  -p 5000:5000 -p 8774:8774 -p 9696:9696 \
+  -p 9292:9292 -p 8776:8776 -p 8778:8778 \
+  -p 8004:8004 -p 8080:8080 -p 9311:9311 \
+  -p 9876:9876 -p 9999:9999 \
+  -e LOCALOSTACK_HOST=0.0.0.0 \
+  localostack/localostack:latest</pre>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 2 -->
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <div class="step-title" data-en="Configure your client" data-ko="클라이언트 설정">Configure your client</div>
+          <p class="step-desc"
+            data-en="Create a clouds.yaml file to use with OpenStack CLI or SDK."
+            data-ko="clouds.yaml을 생성해 OpenStack CLI 또는 SDK와 연결하세요.">
+            Create a clouds.yaml file to use with OpenStack CLI or SDK.
+          </p>
+          <div class="tab-group">
+            <button class="tab active" onclick="switchTab(this,'clouds-yaml')">clouds.yaml</button>
+            <button class="tab" onclick="switchTab(this,'sdk-py')">Python SDK</button>
+            <button class="tab" onclick="switchTab(this,'tf-hcl')">Terraform</button>
+          </div>
+          <div id="clouds-yaml" class="tab-panel active">
+            <div class="code-block">
+              <div class="code-block-header">
+                <span>~/.config/openstack/clouds.yaml</span>
+                <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+              </div>
+              <pre><span class="k">clouds</span>:
+  <span class="k">localostack</span>:
+    <span class="k">auth</span>:
+      <span class="k">auth_url</span>: <span class="s">http://localhost:5000</span>
+      <span class="k">username</span>: <span class="s">admin</span>
+      <span class="k">password</span>: <span class="s">password</span>
+      <span class="k">project_name</span>: <span class="s">admin</span>
+      <span class="k">user_domain_name</span>: <span class="s">Default</span>
+      <span class="k">project_domain_name</span>: <span class="s">Default</span>
+    <span class="k">region_name</span>: <span class="s">RegionOne</span>
+    <span class="k">interface</span>: <span class="s">public</span></pre>
+            </div>
+          </div>
+          <div id="sdk-py" class="tab-panel">
+            <div class="code-block">
+              <div class="code-block-header">
+                <span>Python</span>
+                <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+              </div>
+              <pre><span class="kw">import</span> openstack
+
+conn = openstack.connect(
+    auth_url=<span class="s">"http://localhost:5000/v3"</span>,
+    project_name=<span class="s">"admin"</span>,
+    username=<span class="s">"admin"</span>,
+    password=<span class="s">"password"</span>,
+    user_domain_name=<span class="s">"Default"</span>,
+    project_domain_name=<span class="s">"Default"</span>,
+)
+
+<span class="cm"># List servers</span>
+<span class="kw">for</span> server <span class="kw">in</span> conn.compute.servers():
+    <span class="kw">print</span>(server.name, server.status)</pre>
+            </div>
+          </div>
+          <div id="tf-hcl" class="tab-panel">
+            <div class="code-block">
+              <div class="code-block-header">
+                <span>main.tf</span>
+                <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+              </div>
+              <pre><span class="k">provider</span> <span class="s">"openstack"</span> {
+  auth_url    = <span class="s">"http://localhost:5000/v3"</span>
+  tenant_name = <span class="s">"admin"</span>
+  user_name   = <span class="s">"admin"</span>
+  password    = <span class="s">"password"</span>
+  region      = <span class="s">"RegionOne"</span>
+}
+
+<span class="k">resource</span> <span class="s">"openstack_compute_instance_v2"</span> <span class="s">"test"</span> {
+  name      = <span class="s">"my-instance"</span>
+  flavor_id = <span class="s">"1"</span>
+  image_id  = data.openstack_images_image_v2.cirros.id
+}</pre>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 3 -->
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <div class="step-title" data-en="Start using it!" data-ko="바로 사용하세요!">Start using it!</div>
+          <p class="step-desc"
+            data-en="Use the OpenStack CLI or any SDK just like you would with a real cloud."
+            data-ko="실제 OpenStack 클라우드와 동일하게 CLI나 SDK를 사용하세요.">
+            Use the OpenStack CLI or any SDK just like you would with a real cloud.
+          </p>
+          <div class="code-block">
+            <div class="code-block-header">
+              <span>bash</span>
+              <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+            </div>
+            <pre><span class="cm"># List flavors</span>
+openstack --os-cloud localostack flavor list
+
+<span class="cm"># Create a server</span>
+openstack --os-cloud localostack server create \
+  --flavor m1.tiny \
+  --image cirros-0.6.2 \
+  my-test-server
+
+<span class="cm"># Open the admin dashboard</span>
+open http://localhost:9999</pre>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<hr class="divider" />
+
+<!-- ── Configuration ───────────────────────────────────────────────── -->
+<section id="config">
+  <div class="container">
+    <div class="section-label" data-en="CONFIGURATION" data-ko="환경 설정">CONFIGURATION</div>
+    <h2 data-en="Environment Variables" data-ko="환경 변수">Environment Variables</h2>
+    <p class="section-sub"
+      data-en="All configuration is done via environment variables. Every setting has a sensible default."
+      data-ko="모든 설정은 환경 변수로 제어합니다. 기본값이 제공되므로 별도 설정 없이 바로 사용 가능합니다.">
+      All configuration is done via environment variables. Every setting has a sensible default.
+    </p>
+
+    <!-- Ports -->
+    <div class="config-group">
+      <div class="config-group-title" data-en="Service Ports" data-ko="서비스 포트">Service Ports</div>
+      <table class="config-table">
+        <thead><tr>
+          <th data-en="Variable" data-ko="변수명">Variable</th>
+          <th data-en="Default" data-ko="기본값">Default</th>
+          <th data-en="Description" data-ko="설명">Description</th>
+        </tr></thead>
+        <tbody>
+          <tr><td>LOCALOSTACK_HOST</td><td>0.0.0.0</td><td data-en="Bind address" data-ko="바인드 주소">Bind address</td></tr>
+          <tr><td>LOCALOSTACK_KEYSTONE_PORT</td><td>5000</td><td>Keystone Identity</td></tr>
+          <tr><td>LOCALOSTACK_NOVA_PORT</td><td>8774</td><td>Nova Compute</td></tr>
+          <tr><td>LOCALOSTACK_NEUTRON_PORT</td><td>9696</td><td>Neutron Network</td></tr>
+          <tr><td>LOCALOSTACK_GLANCE_PORT</td><td>9292</td><td>Glance Image</td></tr>
+          <tr><td>LOCALOSTACK_CINDER_PORT</td><td>8776</td><td>Cinder Block Storage</td></tr>
+          <tr><td>LOCALOSTACK_PLACEMENT_PORT</td><td>8778</td><td>Placement</td></tr>
+          <tr><td>LOCALOSTACK_HEAT_PORT</td><td>8004</td><td>Heat Orchestration</td></tr>
+          <tr><td>LOCALOSTACK_SWIFT_PORT</td><td>8080</td><td>Swift Object Storage</td></tr>
+          <tr><td>LOCALOSTACK_BARBICAN_PORT</td><td>9311</td><td>Barbican Secrets</td></tr>
+          <tr><td>LOCALOSTACK_OCTAVIA_PORT</td><td>9876</td><td>Octavia Load Balancer</td></tr>
+          <tr><td>LOCALOSTACK_ADMIN_PORT</td><td>9999</td><td data-en="Admin API &amp; Dashboard" data-ko="관리 API & 대시보드">Admin API &amp; Dashboard</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Auth -->
+    <div class="config-group">
+      <div class="config-group-title" data-en="Auth &amp; Region" data-ko="인증 & 리전">Auth &amp; Region</div>
+      <table class="config-table">
+        <thead><tr>
+          <th data-en="Variable" data-ko="변수명">Variable</th>
+          <th data-en="Default" data-ko="기본값">Default</th>
+          <th data-en="Description" data-ko="설명">Description</th>
+        </tr></thead>
+        <tbody>
+          <tr><td>LOCALOSTACK_ADMIN_USERNAME</td><td>admin</td><td data-en="Admin username" data-ko="관리자 계정명">Admin username</td></tr>
+          <tr><td>LOCALOSTACK_ADMIN_PASSWORD</td><td>password</td><td data-en="Admin password" data-ko="관리자 비밀번호">Admin password</td></tr>
+          <tr><td>LOCALOSTACK_ADMIN_PROJECT</td><td>admin</td><td data-en="Admin project name" data-ko="관리자 프로젝트명">Admin project name</td></tr>
+          <tr><td>LOCALOSTACK_REGION</td><td>RegionOne</td><td data-en="OpenStack region name" data-ko="OpenStack 리전 이름">OpenStack region name</td></tr>
+          <tr><td>LOCALOSTACK_ENDPOINT_HOST</td><td>localhost</td><td data-en="Service catalog hostname" data-ko="서비스 카탈로그 호스트명">Service catalog hostname</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Persistence -->
+    <div class="config-group">
+      <div class="config-group-title" data-en="Persistence" data-ko="데이터 영속성">Persistence</div>
+      <table class="config-table">
+        <thead><tr>
+          <th data-en="Variable" data-ko="변수명">Variable</th>
+          <th data-en="Default" data-ko="기본값">Default</th>
+          <th data-en="Description" data-ko="설명">Description</th>
+        </tr></thead>
+        <tbody>
+          <tr>
+            <td>LOCALOSTACK_PERSISTENCE</td>
+            <td>memory</td>
+            <td data-en="&quot;memory&quot; or &quot;sqlite&quot; — sqlite survives restarts" data-ko="&quot;memory&quot; 또는 &quot;sqlite&quot; — sqlite는 재시작 후에도 데이터 유지">"memory" or "sqlite"</td>
+          </tr>
+          <tr>
+            <td>LOCALOSTACK_DB_PATH</td>
+            <td>/var/lib/localostack/state.db</td>
+            <td data-en="SQLite database file path" data-ko="SQLite 데이터베이스 파일 경로">SQLite database file path</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Fault Injection -->
+    <div class="config-group">
+      <div class="config-group-title" data-en="Fault Injection" data-ko="장애 주입">Fault Injection</div>
+      <table class="config-table">
+        <thead><tr>
+          <th data-en="Variable" data-ko="변수명">Variable</th>
+          <th data-en="Default" data-ko="기본값">Default</th>
+          <th data-en="Description" data-ko="설명">Description</th>
+        </tr></thead>
+        <tbody>
+          <tr>
+            <td>LOCALOSTACK_FAULT_RULES</td>
+            <td>""</td>
+            <td data-en="JSON array of fault rules — or use Admin API POST /admin/fault-rules" data-ko="JSON 배열 형식의 장애 규칙 — 또는 Admin API 사용">JSON fault rules — or use Admin API</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+</section>
+
+<hr class="divider" />
+
+<!-- ── Compatibility ───────────────────────────────────────────────── -->
+<section>
+  <div class="container">
+    <div class="section-label" data-en="COMPATIBILITY" data-ko="호환성">COMPATIBILITY</div>
+    <h2 data-en="Works with your existing tools" data-ko="기존 도구와 바로 호환">Works with your existing tools</h2>
+    <p class="section-sub"
+      data-en="No special plugins or adapters needed. LocalOStack speaks the same API language as real OpenStack."
+      data-ko="별도 플러그인이나 어댑터가 필요 없습니다. 실제 OpenStack과 동일한 API를 사용합니다.">
+      No special plugins or adapters needed. LocalOStack speaks the same API language as real OpenStack.
+    </p>
+    <div class="compat-grid">
+      <div class="compat-card">
+        <span class="compat-icon">🐍</span>
+        <div>
+          <div class="compat-name">openstacksdk</div>
+          <div class="compat-note" data-en="Python SDK" data-ko="Python SDK">Python SDK</div>
+        </div>
+      </div>
+      <div class="compat-card">
+        <span class="compat-icon">⌨️</span>
+        <div>
+          <div class="compat-name">python-openstackclient</div>
+          <div class="compat-note" data-en="CLI tool" data-ko="CLI 도구">CLI tool</div>
+        </div>
+      </div>
+      <div class="compat-card">
+        <span class="compat-icon">🏗️</span>
+        <div>
+          <div class="compat-name">Terraform</div>
+          <div class="compat-note" data-en="OpenStack Provider" data-ko="OpenStack 프로바이더">OpenStack Provider</div>
+        </div>
+      </div>
+      <div class="compat-card">
+        <span class="compat-icon">🐹</span>
+        <div>
+          <div class="compat-name">gophercloud</div>
+          <div class="compat-note" data-en="Go SDK" data-ko="Go SDK">Go SDK</div>
+        </div>
+      </div>
+      <div class="compat-card">
+        <span class="compat-icon">⚙️</span>
+        <div>
+          <div class="compat-name">GitHub Actions</div>
+          <div class="compat-note" data-en="CI/CD integration" data-ko="CI/CD 연동">CI/CD integration</div>
+        </div>
+      </div>
+      <div class="compat-card">
+        <span class="compat-icon">🐳</span>
+        <div>
+          <div class="compat-name">Docker Compose</div>
+          <div class="compat-note" data-en="Container orchestration" data-ko="컨테이너 오케스트레이션">Container orchestration</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="divider" />
+
+<!-- ── Fault Injection callout ─────────────────────────────────────── -->
+<section>
+  <div class="container">
+    <div style="background:var(--bg2);border:1px solid var(--border);border-left:3px solid var(--accent2);border-radius:var(--radius);padding:1.75rem 2rem;">
+      <div class="section-label" data-en="ADVANCED" data-ko="고급 기능" style="margin-bottom:.5rem">ADVANCED</div>
+      <h2 style="font-size:1.4rem;margin-bottom:.6rem" data-en="Fault Injection — Test your resilience" data-ko="장애 주입 — 복원력 테스트">Fault Injection — Test your resilience</h2>
+      <p style="color:var(--text-dim);font-size:.88rem;margin-bottom:1.25rem"
+        data-en="Inject errors, delays, and throttling into any service to test how your application handles failures."
+        data-ko="모든 서비스에 에러, 지연, 쓰로틀링을 주입해 애플리케이션의 장애 내성을 검증하세요.">
+        Inject errors, delays, and throttling into any service to test how your application handles failures.
+      </p>
+      <div class="code-block">
+        <div class="code-block-header">
+          <span data-en="Add a fault rule via Admin API" data-ko="Admin API로 장애 규칙 추가">Add a fault rule via Admin API</span>
+          <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+        </div>
+        <pre><span class="cm"># Inject 500 errors on 50% of Nova server requests</span>
+curl -X POST http://localhost:9999/admin/fault-rules \
+  -H <span class="s">'Content-Type: application/json'</span> \
+  -d <span class="s">'{
+    "service": "nova",
+    "method": "POST",
+    "path_pattern": "/v2.1/servers",
+    "action": "error",
+    "status_code": 500,
+    "probability": 0.5
+  }'</span>
+
+<span class="cm"># Remove all fault rules</span>
+curl -X DELETE http://localhost:9999/admin/fault-rules</pre>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="divider" />
+
+<!-- ── Footer ─────────────────────────────────────────────────────── -->
+<footer>
+  <p style="margin-bottom:.5rem">
+    <strong style="color:#fff">LocalOStack</strong> —
+    <span data-en="Local OpenStack API Emulator" data-ko="로컬 OpenStack API 에뮬레이터">Local OpenStack API Emulator</span>
+  </p>
+  <p>
+    <a href="https://github.com/byeonjaehan/localostack" target="_blank">GitHub</a> ·
+    <a href="https://github.com/byeonjaehan/localostack/issues" target="_blank"
+      data-en="Issues" data-ko="이슈">Issues</a> ·
+    <a href="https://github.com/byeonjaehan/localostack/blob/main/LICENSE" target="_blank">MIT License</a>
+  </p>
+  <p style="margin-top:.75rem;font-size:.75rem;color:#484f58"
+    data-en="Not affiliated with OpenStack Foundation or Red Hat."
+    data-ko="OpenStack Foundation 또는 Red Hat과 무관한 독립 오픈소스 프로젝트입니다.">
+    Not affiliated with OpenStack Foundation or Red Hat.
+  </p>
+</footer>
+
+<script>
+  // ── Language switch ─────────────────────────────────────────────
+  function setLang(lang) {
+    document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.lang-btn').forEach(b => {
+      if ((lang === 'en' && b.textContent === 'EN') ||
+          (lang === 'ko' && b.textContent === '한국어')) {
+        b.classList.add('active');
+      }
+    });
+    document.querySelectorAll('[data-en][data-ko]').forEach(el => {
+      el.textContent = lang === 'ko' ? el.dataset.ko : el.dataset.en;
+    });
+    document.documentElement.lang = lang;
+    localStorage.setItem('los-lang', lang);
+  }
+
+  // Restore saved language
+  const saved = localStorage.getItem('los-lang');
+  if (saved === 'ko') setLang('ko');
+
+  // ── Tab switcher ─────────────────────────────────────────────────
+  function switchTab(btn, panelId) {
+    const group = btn.closest('.step-body');
+    group.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    group.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    group.querySelector('#' + panelId).classList.add('active');
+  }
+
+  // ── Copy button ──────────────────────────────────────────────────
+  function copyCode(btn) {
+    const pre = btn.closest('.code-block').querySelector('pre');
+    navigator.clipboard.writeText(pre.innerText).then(() => {
+      const orig = btn.textContent;
+      btn.textContent = '✓ Copied';
+      setTimeout(() => { btn.textContent = orig; }, 2000);
+    });
+  }
+
+  function copyHeroCmd(btn) {
+    const code = document.getElementById('hero-cmd-code');
+    navigator.clipboard.writeText(code.innerText).then(() => {
+      const lang = document.documentElement.lang || 'en';
+      btn.textContent = lang === 'ko' ? '✓ 복사됨' : '✓ Copied';
+      setTimeout(() => {
+        btn.textContent = lang === 'ko' ? '복사' : 'Copy';
+      }, 2000);
+    });
+  }
+
+  // ── Smooth scroll for nav links ──────────────────────────────────
+  document.querySelectorAll('a[href^="#"]').forEach(a => {
+    a.addEventListener('click', e => {
+      const target = document.querySelector(a.getAttribute('href'));
+      if (target) {
+        e.preventDefault();
+        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    });
+  });
+</script>
+
+</body>
+</html>
