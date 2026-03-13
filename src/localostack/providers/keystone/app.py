@@ -34,6 +34,8 @@ def create_keystone_app(backend=None, fault_registry=None) -> FastAPI:
         placement_port=config.placement_port,
         heat_port=config.heat_port,
         swift_port=config.swift_port,
+        barbican_port=config.barbican_port,
+        octavia_port=config.octavia_port,
     )
     app.state.keystone_store = store
 

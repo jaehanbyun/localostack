@@ -12,6 +12,8 @@ class ServiceConfig:
     placement_port: int = 8778
     heat_port: int = 8004
     swift_port: int = 8080
+    barbican_port: int = 9311
+    octavia_port: int = 9876
 
     # Bootstrap
     admin_username: str = "admin"
@@ -47,6 +49,8 @@ def load_config() -> ServiceConfig:
     config.placement_port = int(os.environ.get("LOCALOSTACK_PLACEMENT_PORT", config.placement_port))
     config.heat_port = int(os.environ.get("LOCALOSTACK_HEAT_PORT", config.heat_port))
     config.swift_port = int(os.environ.get("LOCALOSTACK_SWIFT_PORT", config.swift_port))
+    config.barbican_port = int(os.environ.get("LOCALOSTACK_BARBICAN_PORT", config.barbican_port))
+    config.octavia_port = int(os.environ.get("LOCALOSTACK_OCTAVIA_PORT", config.octavia_port))
     config.admin_username = os.environ.get("LOCALOSTACK_ADMIN_USERNAME", config.admin_username)
     config.admin_password = os.environ.get("LOCALOSTACK_ADMIN_PASSWORD", config.admin_password)
     config.server_build_mode = os.environ.get("LOCALOSTACK_SERVER_BUILD_MODE", config.server_build_mode)

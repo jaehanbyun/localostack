@@ -207,6 +207,8 @@ class KeystoneStore:
         placement_port: int = 8778,
         heat_port: int = 8004,
         swift_port: int = 8080,
+        barbican_port: int = 9311,
+        octavia_port: int = 9876,
     ):
         self._load_persisted()
 
@@ -272,6 +274,8 @@ class KeystoneStore:
             ("placement", "placement", f"{base}:{placement_port}"),
             ("orchestration", "heat", f"{base}:{heat_port}/v1/{proj_id}"),
             ("object-store", "swift", f"{base}:{swift_port}/v1/{proj_id}"),
+            ("key-manager", "barbican", f"{base}:{barbican_port}"),
+            ("load-balancer", "octavia", f"{base}:{octavia_port}"),
         ]
         for stype, sname, url in service_defs:
             svc = Service(id=self._uuid(), type=stype, name=sname)
