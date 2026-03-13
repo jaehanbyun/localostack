@@ -449,3 +449,32 @@ async def delete_security_group_rule(rule_id: str, request: Request):
 async def list_extensions(request: Request):
     _require_token(request)
     return {"extensions": []}
+
+
+# ── Quotas ─────────────────────────────────────────────────
+
+_DEFAULT_QUOTA = {
+    "network": 100, "subnet": 100, "port": 500,
+    "router": 10, "floatingip": 50, "security_group": 10,
+    "security_group_rule": 100, "rbac_policy": 10,
+    "subnetpool": -1, "trunk": -1,
+}
+
+
+@router.get("/v2.0/quotas/{project_id}")
+async def get_quota(project_id: str, request: Request):
+    _require_token(request)
+    return {"quota": {**_DEFAULT_QUOTA, "project_id": project_id}}
+
+
+@router.get("/v2.0/quotas/{project_id}/details")
+async def get_quota_details(project_id: str, request: Request):
+    _require_token(request)
+    details = {k: {"limit": v, "used": 0, "reserved": 0} for k, v in _DEFAULT_QUOTA.items()}
+    return {"quota": details}
+
+
+@router.get("/v2.0/quotas")
+async def list_quotas(request: Request):
+    _require_token(request)
+    return {"quotas": [_DEFAULT_QUOTA]}

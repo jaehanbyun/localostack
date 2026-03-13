@@ -390,6 +390,31 @@ async def delete_keypair(name: str, request: Request):
     return Response(status_code=204)
 
 
+# ── Quota Sets ────────────────────────────────────────────
+
+_DEFAULT_NOVA_QUOTA = {
+    "cores": 20, "instances": 10, "ram": 51200,
+    "key_pairs": 100, "metadata_items": 128,
+    "injected_files": 5, "injected_file_content_bytes": 10240,
+    "security_groups": 10, "security_group_rules": 20,
+    "server_groups": 10, "server_group_members": 10,
+    "fixed_ips": -1, "floating_ips": 10,
+}
+
+
+@router.get("/v2.1/os-quota-sets/{project_id}")
+async def get_quota_sets(project_id: str, request: Request):
+    _require_token(request)
+    return {"quota_set": {**_DEFAULT_NOVA_QUOTA, "id": project_id}}
+
+
+@router.get("/v2.1/os-quota-sets/{project_id}/detail")
+async def get_quota_sets_detail(project_id: str, request: Request):
+    _require_token(request)
+    details = {k: {"limit": v, "in_use": 0, "reserved": 0} for k, v in _DEFAULT_NOVA_QUOTA.items()}
+    return {"quota_set": {**details, "id": project_id}}
+
+
 # ── Limits ────────────────────────────────────────────────
 
 @router.get("/v2.1/limits")
