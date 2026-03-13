@@ -1,11 +1,14 @@
 """Integration tests for fault injection admin API."""
 
 import os
+import pathlib
 import subprocess
 import time
 
 import httpx
 import pytest
+
+_PROJECT_ROOT = str(pathlib.Path(__file__).resolve().parent.parent.parent)
 
 KEYSTONE_PORT = 25200
 NOVA_PORT = 28810
@@ -47,7 +50,7 @@ def server_process():
         env=env,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
-        cwd="/Users/byeonjaehan/projects/localostack",
+        cwd=_PROJECT_ROOT,
     )
     for _ in range(30):
         try:
@@ -218,7 +221,7 @@ class TestFaultInjectionBehavior:
         p = subprocess.Popen(
             ["uv", "run", "localostack"], env=env,
             stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-            cwd="/Users/byeonjaehan/projects/localostack",
+            cwd=_PROJECT_ROOT,
         )
         try:
             for _ in range(30):

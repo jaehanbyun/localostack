@@ -1,8 +1,12 @@
+import os
+import pathlib
 import subprocess
 import time
-import os
-import pytest
+
 import httpx
+import pytest
+
+_PROJECT_ROOT = str(pathlib.Path(__file__).resolve().parent.parent.parent)
 
 KEYSTONE_PORT = 15000
 NOVA_PORT = 18774
@@ -59,7 +63,7 @@ def server_process():
         env=env,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
-        cwd="/Users/byeonjaehan/projects/localostack",
+        cwd=_PROJECT_ROOT,
     )
 
     for _ in range(30):

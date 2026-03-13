@@ -1,12 +1,15 @@
 """Smoke tests using openstacksdk against a running LocalOStack server."""
 
+import os
+import pathlib
 import subprocess
 import time
-import os
 
 import httpx
 import openstack
 import pytest
+
+_PROJECT_ROOT = str(pathlib.Path(__file__).resolve().parent.parent.parent)
 
 KEYSTONE_PORT = 25000
 NOVA_PORT = 28774
@@ -45,7 +48,7 @@ def server_process():
         env=env,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
-        cwd="/Users/byeonjaehan/projects/localostack",
+        cwd=_PROJECT_ROOT,
     )
 
     for _ in range(30):

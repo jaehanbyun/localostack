@@ -1,11 +1,14 @@
 """Octavia Load Balancer API integration tests."""
 
 import os
+import pathlib
 import subprocess
 import time
 
 import httpx
 import pytest
+
+_PROJECT_ROOT = str(pathlib.Path(__file__).resolve().parent.parent.parent)
 
 KEYSTONE_PORT = 25700
 NOVA_PORT = 28870
@@ -44,7 +47,7 @@ def server_process():
     proc = subprocess.Popen(
         ["uv", "run", "localostack"], env=env,
         stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-        cwd="/Users/byeonjaehan/projects/localostack",
+        cwd=_PROJECT_ROOT,
     )
     for _ in range(30):
         try:
