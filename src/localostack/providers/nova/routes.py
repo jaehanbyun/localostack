@@ -130,6 +130,7 @@ def _flavor_detail(f) -> dict:
         "ram": f.ram,
         "disk": f.disk,
         "OS-FLV-EXT-DATA:ephemeral": f.ephemeral,
+        "OS-FLV-DISABLED:disabled": False,
         "swap": f.swap,
         "rxtx_factor": f.rxtx_factor,
         "os-flavor-access:is_public": f.is_public,

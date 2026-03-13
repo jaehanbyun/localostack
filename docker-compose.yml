@@ -4,10 +4,16 @@ services:
       context: .
       dockerfile: docker/Dockerfile
     ports:
-      - "5000:5000"
-      - "8774:8774"
-      - "9696:9696"
-      - "9292:9292"
-      - "8776:8776"
+      - "15000:5000"  # Keystone
+      - "8774:8774"   # Nova
+      - "9696:9696"   # Neutron
+      - "9292:9292"   # Glance
+      - "8776:8776"   # Cinder
+      - "8778:8778"   # Placement
+      - "8004:8004"   # Heat
+      - "8080:8080"   # Swift
+      - "9311:9311"   # Barbican
+      - "9876:9876"   # Octavia
+      - "9999:9999"   # Admin
     environment:
       - LOCALOSTACK_HOST=0.0.0.0

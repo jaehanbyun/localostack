@@ -41,6 +41,17 @@ def create_keystone_app(backend=None, fault_registry=None) -> FastAPI:
 
     app.include_router(router)
 
+    @app.middleware("http")
+    async def _debug_auth(request: Request, call_next):
+        import logging
+        path = request.url.path
+        if "auth" in path:
+            token = request.headers.get("X-Auth-Token", "")
+            auth = request.headers.get("Authorization", "")
+            stored = list(store.tokens.keys())
+            logging.warning(f"[{path}] method={request.method} token={repr(token[:20])} stored_count={len(stored)} ids={[t[:8] for t in stored]}")
+        return await call_next(request)
+
     @app.exception_handler(_AuthError)
     async def auth_error_handler(request: Request, exc: _AuthError):
         return exc.response

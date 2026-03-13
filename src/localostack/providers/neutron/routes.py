@@ -478,3 +478,79 @@ async def get_quota_details(project_id: str, request: Request):
 async def list_quotas(request: Request):
     _require_token(request)
     return {"quotas": [_DEFAULT_QUOTA]}
+
+
+# ── Routers ────────────────────────────────────────────────
+
+@router.get("/v2.0/routers")
+async def list_routers(request: Request):
+    _require_token(request)
+    return {"routers": []}
+
+
+@router.post("/v2.0/routers", status_code=201)
+async def create_router(request: Request):
+    _require_token(request)
+    import uuid, datetime
+    body = await request.json()
+    data = body.get("router", body)
+    now = datetime.datetime.utcnow().isoformat() + "Z"
+    r = {
+        "id": str(uuid.uuid4()), "name": data.get("name", ""),
+        "status": "ACTIVE", "admin_state_up": data.get("admin_state_up", True),
+        "external_gateway_info": data.get("external_gateway_info"),
+        "distributed": False, "ha": False,
+        "created_at": now, "updated_at": now,
+    }
+    return {"router": r}
+
+
+@router.get("/v2.0/routers/{router_id}")
+async def get_router(router_id: str, request: Request):
+    _require_token(request)
+    return Response(status_code=404)
+
+
+@router.delete("/v2.0/routers/{router_id}")
+async def delete_router(router_id: str, request: Request):
+    _require_token(request)
+    return Response(status_code=204)
+
+
+# ── Floating IPs ───────────────────────────────────────────
+
+@router.get("/v2.0/floatingips")
+async def list_floatingips(request: Request):
+    _require_token(request)
+    return {"floatingips": []}
+
+
+@router.post("/v2.0/floatingips", status_code=201)
+async def create_floatingip(request: Request):
+    _require_token(request)
+    import uuid, datetime
+    body = await request.json()
+    data = body.get("floatingip", body)
+    now = datetime.datetime.utcnow().isoformat() + "Z"
+    fip = {
+        "id": str(uuid.uuid4()),
+        "floating_ip_address": f"10.0.0.{uuid.uuid4().int % 200 + 50}",
+        "floating_network_id": data.get("floating_network_id", ""),
+        "port_id": data.get("port_id"),
+        "fixed_ip_address": None,
+        "status": "ACTIVE",
+        "created_at": now, "updated_at": now,
+    }
+    return {"floatingip": fip}
+
+
+@router.get("/v2.0/floatingips/{fip_id}")
+async def get_floatingip(fip_id: str, request: Request):
+    _require_token(request)
+    return Response(status_code=404)
+
+
+@router.delete("/v2.0/floatingips/{fip_id}")
+async def delete_floatingip(fip_id: str, request: Request):
+    _require_token(request)
+    return Response(status_code=204)

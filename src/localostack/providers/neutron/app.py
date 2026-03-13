@@ -34,13 +34,14 @@ def create_neutron_app(admin_project_id: str | None = None, backend=None, fault_
             return await make_fault_middleware(_fr, _svc)(request, call_next)
 
     @app.get("/")
-    async def version_discovery():
+    async def version_discovery(request: Request):
+        base = str(request.base_url).rstrip("/")
         return {
             "versions": [
                 {
                     "id": "v2.0",
                     "status": "CURRENT",
-                    "links": [{"rel": "self", "href": "/v2.0/"}],
+                    "links": [{"rel": "self", "href": f"{base}/v2.0/"}],
                 }
             ]
         }

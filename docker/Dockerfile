@@ -15,7 +15,7 @@ RUN chmod +x /docker-entrypoint.sh
 
 ENV LOCALOSTACK_HOST=0.0.0.0
 
-EXPOSE 5000 8774 9696 9292 8776
+EXPOSE 5000 8774 9696 9292 8776 8778 8004 8080 9311 9876 9999
 
 ENTRYPOINT ["/docker-entrypoint.sh"]
 CMD ["localostack"]
