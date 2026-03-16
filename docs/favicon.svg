@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <rect width="32" height="32" rx="6" fill="#080C14"/>
+
+  <!-- Top layer — electric cyan, offset right -->
+  <polygon points="18,3 29,6 18,9 7,6" fill="#22D3EE"/>
+
+  <!-- Middle layer — violet, offset left -->
+  <polygon points="14,13 25,16 14,19 3,16" fill="#8B5CF6"/>
+
+  <!-- Bottom layer — hot pink, offset right -->
+  <polygon points="16,23 27,26 16,29 5,26" fill="#EC4899"/>
+</svg>
