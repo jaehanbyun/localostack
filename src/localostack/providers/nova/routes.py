@@ -168,7 +168,8 @@ def _keypair_detail(kp) -> dict:
 # ── Server CRUD ───────────────────────────────────────────
 
 @router.get("/v2.1/servers")
-async def list_servers(request: Request):
+@router.get("/v2.1/{project_id}/servers")
+async def list_servers(request: Request, project_id: str = None):
     _require_token(request)
     store = _get_store(request)
     servers = store.list_servers()
@@ -176,7 +177,8 @@ async def list_servers(request: Request):
 
 
 @router.get("/v2.1/servers/detail")
-async def list_servers_detail(request: Request):
+@router.get("/v2.1/{project_id}/servers/detail")
+async def list_servers_detail(request: Request, project_id: str = None):
     _require_token(request)
     store = _get_store(request)
     mv = _get_microversion(request)
@@ -185,7 +187,8 @@ async def list_servers_detail(request: Request):
 
 
 @router.post("/v2.1/servers", status_code=202)
-async def create_server(request: Request):
+@router.post("/v2.1/{project_id}/servers", status_code=202)
+async def create_server(request: Request, project_id: str = None):
     _require_token(request)
     store = _get_store(request)
     mv = _get_microversion(request)
@@ -211,7 +214,8 @@ async def create_server(request: Request):
 
 
 @router.get("/v2.1/servers/{server_id}")
-async def get_server(server_id: str, request: Request):
+@router.get("/v2.1/{project_id}/servers/{server_id}")
+async def get_server(server_id: str, request: Request, project_id: str = None):
     _require_token(request)
     store = _get_store(request)
     mv = _get_microversion(request)
@@ -222,7 +226,8 @@ async def get_server(server_id: str, request: Request):
 
 
 @router.put("/v2.1/servers/{server_id}")
-async def update_server(server_id: str, request: Request):
+@router.put("/v2.1/{project_id}/servers/{server_id}")
+async def update_server(server_id: str, request: Request, project_id: str = None):
     _require_token(request)
     store = _get_store(request)
     mv = _get_microversion(request)
@@ -239,7 +244,8 @@ async def update_server(server_id: str, request: Request):
 
 
 @router.delete("/v2.1/servers/{server_id}")
-async def delete_server(server_id: str, request: Request):
+@router.delete("/v2.1/{project_id}/servers/{server_id}")
+async def delete_server(server_id: str, request: Request, project_id: str = None):
     _require_token(request)
     store = _get_store(request)
     if not store.delete_server(server_id):
@@ -250,7 +256,8 @@ async def delete_server(server_id: str, request: Request):
 # ── Server Actions ────────────────────────────────────────
 
 @router.post("/v2.1/servers/{server_id}/action")
-async def server_action(server_id: str, request: Request):
+@router.post("/v2.1/{project_id}/servers/{server_id}/action")
+async def server_action(server_id: str, request: Request, project_id: str = None):
     _require_token(request)
     store = _get_store(request)
     body = await request.json()
@@ -291,7 +298,8 @@ async def server_action(server_id: str, request: Request):
 # ── Flavor CRUD ───────────────────────────────────────────
 
 @router.get("/v2.1/flavors")
-async def list_flavors(request: Request):
+@router.get("/v2.1/{project_id}/flavors")
+async def list_flavors(request: Request, project_id: str = None):
     _require_token(request)
     store = _get_store(request)
     flavors = store.list_flavors()
@@ -299,7 +307,8 @@ async def list_flavors(request: Request):
 
 
 @router.get("/v2.1/flavors/detail")
-async def list_flavors_detail(request: Request):
+@router.get("/v2.1/{project_id}/flavors/detail")
+async def list_flavors_detail(request: Request, project_id: str = None):
     _require_token(request)
     store = _get_store(request)
     flavors = store.list_flavors()
@@ -307,7 +316,8 @@ async def list_flavors_detail(request: Request):
 
 
 @router.get("/v2.1/flavors/{flavor_id}/os-extra_specs")
-async def get_flavor_extra_specs(flavor_id: str, request: Request):
+@router.get("/v2.1/{project_id}/flavors/{flavor_id}/os-extra_specs")
+async def get_flavor_extra_specs(flavor_id: str, request: Request, project_id: str = None):
     _require_token(request)
     store = _get_store(request)
     if store.get_flavor(flavor_id) is None:
@@ -316,7 +326,8 @@ async def get_flavor_extra_specs(flavor_id: str, request: Request):
 
 
 @router.get("/v2.1/flavors/{flavor_id}")
-async def get_flavor(flavor_id: str, request: Request):
+@router.get("/v2.1/{project_id}/flavors/{flavor_id}")
+async def get_flavor(flavor_id: str, request: Request, project_id: str = None):
     _require_token(request)
     store = _get_store(request)
     flavor = store.get_flavor(flavor_id)
@@ -326,7 +337,8 @@ async def get_flavor(flavor_id: str, request: Request):
 
 
 @router.post("/v2.1/flavors", status_code=200)
-async def create_flavor(request: Request):
+@router.post("/v2.1/{project_id}/flavors", status_code=200)
+async def create_flavor(request: Request, project_id: str = None):
     _require_token(request)
     store = _get_store(request)
     body = await request.json()
@@ -349,7 +361,8 @@ async def create_flavor(request: Request):
 # ── Keypair CRUD ──────────────────────────────────────────
 
 @router.get("/v2.1/os-keypairs")
-async def list_keypairs(request: Request):
+@router.get("/v2.1/{project_id}/os-keypairs")
+async def list_keypairs(request: Request, project_id: str = None):
     _require_token(request)
     store = _get_store(request)
     keypairs = store.list_keypairs()
@@ -357,7 +370,8 @@ async def list_keypairs(request: Request):
 
 
 @router.post("/v2.1/os-keypairs", status_code=200)
-async def create_keypair(request: Request):
+@router.post("/v2.1/{project_id}/os-keypairs", status_code=200)
+async def create_keypair(request: Request, project_id: str = None):
     _require_token(request)
     store = _get_store(request)
     body = await request.json()
@@ -373,7 +387,8 @@ async def create_keypair(request: Request):
 
 
 @router.get("/v2.1/os-keypairs/{name}")
-async def get_keypair(name: str, request: Request):
+@router.get("/v2.1/{project_id}/os-keypairs/{name}")
+async def get_keypair(name: str, request: Request, project_id: str = None):
     _require_token(request)
     store = _get_store(request)
     kp = store.get_keypair(name)
@@ -383,7 +398,8 @@ async def get_keypair(name: str, request: Request):
 
 
 @router.delete("/v2.1/os-keypairs/{name}")
-async def delete_keypair(name: str, request: Request):
+@router.delete("/v2.1/{project_id}/os-keypairs/{name}")
+async def delete_keypair(name: str, request: Request, project_id: str = None):
     _require_token(request)
     store = _get_store(request)
     if not store.delete_keypair(name):
@@ -403,23 +419,26 @@ _DEFAULT_NOVA_QUOTA = {
 }
 
 
-@router.get("/v2.1/os-quota-sets/{project_id}")
-async def get_quota_sets(project_id: str, request: Request):
+@router.get("/v2.1/os-quota-sets/{target_project_id}")
+@router.get("/v2.1/{project_id}/os-quota-sets/{target_project_id}")
+async def get_quota_sets(target_project_id: str, request: Request, project_id: str = None):
     _require_token(request)
-    return {"quota_set": {**_DEFAULT_NOVA_QUOTA, "id": project_id}}
+    return {"quota_set": {**_DEFAULT_NOVA_QUOTA, "id": target_project_id}}
 
 
-@router.get("/v2.1/os-quota-sets/{project_id}/detail")
-async def get_quota_sets_detail(project_id: str, request: Request):
+@router.get("/v2.1/os-quota-sets/{target_project_id}/detail")
+@router.get("/v2.1/{project_id}/os-quota-sets/{target_project_id}/detail")
+async def get_quota_sets_detail(target_project_id: str, request: Request, project_id: str = None):
     _require_token(request)
     details = {k: {"limit": v, "in_use": 0, "reserved": 0} for k, v in _DEFAULT_NOVA_QUOTA.items()}
-    return {"quota_set": {**details, "id": project_id}}
+    return {"quota_set": {**details, "id": target_project_id}}
 
 
 # ── Limits ────────────────────────────────────────────────
 
 @router.get("/v2.1/limits")
-async def get_limits(request: Request):
+@router.get("/v2.1/{project_id}/limits")
+async def get_limits(request: Request, project_id: str = None):
     _require_token(request)
     store = _get_store(request)
     servers = store.list_servers()
@@ -552,7 +571,8 @@ async def list_agents(request: Request):
 # ── Server sub-resources ──────────────────────────────────
 
 @router.get("/v2.1/servers/{server_id}/os-security-groups")
-async def get_server_security_groups(server_id: str, request: Request):
+@router.get("/v2.1/{project_id}/servers/{server_id}/os-security-groups")
+async def get_server_security_groups(server_id: str, request: Request, project_id: str = None):
     _require_token(request)
     store = _get_store(request)
     srv = store.get_server(server_id)
@@ -562,7 +582,8 @@ async def get_server_security_groups(server_id: str, request: Request):
 
 
 @router.get("/v2.1/servers/{server_id}/os-volume_attachments")
-async def get_server_volumes(server_id: str, request: Request):
+@router.get("/v2.1/{project_id}/servers/{server_id}/os-volume_attachments")
+async def get_server_volumes(server_id: str, request: Request, project_id: str = None):
     _require_token(request)
     store = _get_store(request)
     srv = store.get_server(server_id)
@@ -572,7 +593,8 @@ async def get_server_volumes(server_id: str, request: Request):
 
 
 @router.get("/v2.1/servers/{server_id}/os-instance-actions")
-async def get_server_instance_actions(server_id: str, request: Request):
+@router.get("/v2.1/{project_id}/servers/{server_id}/os-instance-actions")
+async def get_server_instance_actions(server_id: str, request: Request, project_id: str = None):
     _require_token(request)
     store = _get_store(request)
     srv = store.get_server(server_id)
@@ -582,7 +604,8 @@ async def get_server_instance_actions(server_id: str, request: Request):
 
 
 @router.get("/v2.1/servers/{server_id}/os-interface")
-async def get_server_interfaces(server_id: str, request: Request):
+@router.get("/v2.1/{project_id}/servers/{server_id}/os-interface")
+async def get_server_interfaces(server_id: str, request: Request, project_id: str = None):
     _require_token(request)
     store = _get_store(request)
     srv = store.get_server(server_id)
@@ -592,7 +615,8 @@ async def get_server_interfaces(server_id: str, request: Request):
 
 
 @router.get("/v2.1/servers/{server_id}/metadata")
-async def get_server_metadata(server_id: str, request: Request):
+@router.get("/v2.1/{project_id}/servers/{server_id}/metadata")
+async def get_server_metadata(server_id: str, request: Request, project_id: str = None):
     _require_token(request)
     store = _get_store(request)
     srv = store.get_server(server_id)
@@ -602,7 +626,8 @@ async def get_server_metadata(server_id: str, request: Request):
 
 
 @router.get("/v2.1/servers/{server_id}/ips")
-async def get_server_ips(server_id: str, request: Request):
+@router.get("/v2.1/{project_id}/servers/{server_id}/ips")
+async def get_server_ips(server_id: str, request: Request, project_id: str = None):
     _require_token(request)
     store = _get_store(request)
     srv = store.get_server(server_id)
@@ -614,6 +639,7 @@ async def get_server_ips(server_id: str, request: Request):
 # ── Console / VNC ─────────────────────────────────────────
 
 @router.get("/v2.1/servers/{server_id}/remote-consoles")
-async def get_server_console(server_id: str, request: Request):
+@router.get("/v2.1/{project_id}/servers/{server_id}/remote-consoles")
+async def get_server_console(server_id: str, request: Request, project_id: str = None):
     _require_token(request)
     return _error(501, "Consoles not supported")
