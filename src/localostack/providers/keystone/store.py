@@ -85,6 +85,7 @@ class KeystoneStore:
         self.services: dict[str, Service] = {}
         self.endpoints: dict[str, Endpoint] = {}
         self.tokens: dict[str, Token] = {}
+        self._revoked: set[str] = set()
 
     def _save(self, rtype: str, id: str, obj) -> None:
         if self._b:
@@ -187,7 +188,11 @@ class KeystoneStore:
         return token
 
     def revoke_token(self, token_id: str) -> bool:
+        self._revoked.add(token_id)
         return self.tokens.pop(token_id, None) is not None
+
+    def is_revoked(self, token_id: str) -> bool:
+        return token_id in self._revoked
 
     # ── bootstrap ────────────────────────────────────────
 

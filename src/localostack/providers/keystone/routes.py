@@ -37,6 +37,9 @@ def _require_token(request: Request) -> str:
             token_id = auth_header[7:]
     if not token_id:
         raise _AuthError(_error(401, "The request you have made requires authentication."))
+    store = _get_store(request)
+    if store.is_revoked(token_id):
+        raise _AuthError(_error(401, "The provided token is not valid."))
     return token_id
 
 
