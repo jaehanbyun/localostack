@@ -8,6 +8,9 @@
   <meta name="description" content="Run 10 OpenStack APIs locally in seconds. Zero config, full API fidelity." />
   <meta property="og:title" content="LocalOStack" />
   <meta property="og:description" content="Local OpenStack API Emulator for development and CI/CD testing." />
+  <script type="importmap">
+{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"}}
+</script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -26,6 +29,32 @@
       --cyan:      #22d3ee;
       --rose:      #fb7185;
       --radius:    10px;
+    }
+
+    /* Starfall additions */
+    @keyframes float {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-10px); }
+    }
+    .float-animation { animation: float 6s ease-in-out infinite; }
+    .gradient-text {
+      background: linear-gradient(135deg, #22d3ee 0%, #8b5cf6 50%, #ec4899 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    #aurora-root {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      z-index: 0; pointer-events: none;
+    }
+    #aurora-root canvas { display: block; width: 100% !important; height: 100% !important; }
+    .hero-overlay {
+      position: absolute; inset: 0; z-index: 1;
+      background: radial-gradient(ellipse 80% 60% at 50% 40%,
+        rgba(0,0,0,0.05) 0%,
+        rgba(0,0,0,0.3) 50%,
+        rgba(0,0,0,0.85) 80%,
+        rgba(0,0,0,1) 100%);
     }
 
     @keyframes fadeInUp {
@@ -116,9 +145,7 @@
       position: relative;
       min-height: 100svh;
       overflow: hidden;
-      background: #000;
       display: flex; flex-direction: column;
-      isolation: isolate;
     }
 
     /* Background gradient layers */
@@ -491,6 +518,8 @@
 </head>
 <body>
 
+<div id="aurora-root"></div>
+
 <!-- ── Navigation ─────────────────────────────────────────────────── -->
 <nav>
   <div class="nav-brand">
@@ -516,18 +545,16 @@
 
 <!-- ── Hero ───────────────────────────────────────────────────────── -->
 <section class="hero-section">
-  <div class="hero-bg"></div>
-  <div class="hero-vignette"></div>
-  <div class="hero-grid"></div>
+  <div class="hero-overlay"></div>
 
-  <div class="hero-content">
+  <div class="hero-content float-animation">
     <div class="hero-eyebrow anim">
       <span class="hero-eyebrow-dot"></span>
       <span data-en="Open Source · MIT License" data-ko="오픈 소스 · MIT 라이선스">Open Source · MIT License</span>
     </div>
 
     <h1 class="anim" style="animation-delay:.1s">
-      Run <span class="accent">OpenStack</span><br/>
+      Run <span class="accent gradient-text">OpenStack</span><br/>
       <span data-en="locally. Zero config." data-ko="로컬에서. 설정 불필요.">locally. Zero config.</span>
     </h1>
 
@@ -579,14 +606,6 @@
     <span class="hero-svc-item">Octavia</span>
   </div>
 
-  <!-- Center glow -->
-  <div class="hero-glow"></div>
-
-  <!-- Pillar columns -->
-  <div class="hero-pillars">
-    <div class="hero-pillars-fade"></div>
-    <div class="hero-pillars-inner" id="pillars"></div>
-  </div>
 </section>
 
 <!-- ── Main content ───────────────────────────────────────────────── -->
@@ -963,23 +982,8 @@ curl -X DELETE http://localhost:9999/admin/fault-rules</pre>
 </div><!-- /.main-content -->
 
 <script>
-  // ── Pillar columns ────────────────────────────────────────────────
-  const pillarHeights = [92,84,78,70,62,54,46,34,18,34,46,54,62,70,78,84,92];
-  const pillarsEl = document.getElementById('pillars');
-  pillarHeights.forEach((h, i) => {
-    const div = document.createElement('div');
-    div.className = 'hero-pillar';
-    div.style.height = '0%';
-    div.style.transitionDelay = `${Math.abs(i - Math.floor(pillarHeights.length / 2)) * 60}ms`;
-    pillarsEl.appendChild(div);
-  });
-
   // ── Animate on load ───────────────────────────────────────────────
   setTimeout(() => {
-    // Pillars
-    document.querySelectorAll('.hero-pillar').forEach((el, i) => {
-      el.style.height = pillarHeights[i] + '%';
-    });
     // Fade-in elements
     document.querySelectorAll('.anim').forEach(el => {
       el.classList.add('visible');
@@ -1039,6 +1043,69 @@ curl -X DELETE http://localhost:9999/admin/fault-rules</pre>
       }
     });
   });
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+
+const mount = document.getElementById('aurora-root');
+if (!mount) throw new Error('no mount');
+
+const scene = new THREE.Scene();
+const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+const renderer = new THREE.WebGLRenderer({ alpha: false, antialias: false });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.domElement.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;display:block;';
+mount.appendChild(renderer.domElement);
+
+const material = new THREE.ShaderMaterial({
+  uniforms: {
+    iTime: { value: 0 },
+    iResolution: { value: new THREE.Vector2(window.innerWidth, window.innerHeight) }
+  },
+  vertexShader: `void main() { gl_Position = vec4(position, 1.0); }`,
+  fragmentShader: `
+    uniform float iTime; uniform vec2 iResolution;
+    #define NUM_OCTAVES 3
+    float rand(vec2 n){return fract(sin(dot(n,vec2(12.9898,4.1414)))*43758.5453);}
+    float noise(vec2 p){vec2 ip=floor(p);vec2 u=fract(p);u=u*u*(3.0-2.0*u);float res=mix(mix(rand(ip),rand(ip+vec2(1.0,0.0)),u.x),mix(rand(ip+vec2(0.0,1.0)),rand(ip+vec2(1.0,1.0)),u.x),u.y);return res*res;}
+    float fbm(vec2 x){float v=0.0;float a=0.3;vec2 shift=vec2(100);mat2 rot=mat2(cos(0.5),sin(0.5),-sin(0.5),cos(0.50));for(int i=0;i<NUM_OCTAVES;++i){v+=a*noise(x);x=rot*x*2.0+shift;a*=0.4;}return v;}
+    void main(){
+      vec2 p=((gl_FragCoord.xy)-iResolution.xy*0.5)/iResolution.y*mat2(6.,-4.,4.,6.);
+      vec4 o=vec4(0.);
+      float f=2.+fbm(p+vec2(iTime*5.,0.))*.5;
+      for(float i=0.;i++<35.;){
+        vec2 v=p+cos(i*i+(iTime+p.x*.08)*.025+i*vec2(13.,11.))*3.5;
+        float tailNoise=fbm(v+vec2(iTime*.5,i))*.3*(1.-(i/35.));
+        vec4 auroraColors=vec4(.1+.3*sin(i*.2+iTime*.4),.3+.5*cos(i*.3+iTime*.5),.7+.3*sin(i*.4+iTime*.3),1.);
+        vec4 contrib=auroraColors*exp(sin(i*i+iTime*.8))/length(max(v,vec2(v.x*f*.015,v.y*1.5)));
+        float thin=smoothstep(0.,1.,i/35.)*.6;
+        o+=contrib*(1.+tailNoise*.8)*thin;
+      }
+      o=tanh(pow(o/100.,vec4(1.6)));
+      gl_FragColor=o*1.5;
+    }
+  `
+});
+
+const mesh = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), material);
+scene.add(mesh);
+
+let running = true;
+const animate = () => {
+  if (!running) return;
+  requestAnimationFrame(animate);
+  material.uniforms.iTime.value += 0.016;
+  renderer.render(scene, camera);
+};
+
+window.addEventListener('resize', () => {
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  material.uniforms.iResolution.value.set(window.innerWidth, window.innerHeight);
+});
+
+animate();
 </script>
 
 </body>
