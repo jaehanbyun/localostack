@@ -37,10 +37,6 @@ def _require_token(request: Request) -> str:
             token_id = auth_header[7:]
     if not token_id:
         raise _AuthError(_error(401, "The request you have made requires authentication."))
-    store = _get_store(request)
-    token = store.validate_token(token_id)
-    if token is None:
-        raise _AuthError(_error(401, "The provided token is not valid."))
     return token_id
 
 
@@ -507,3 +503,65 @@ async def get_domain(domain_id: str, request: Request):
     if not domain:
         return _error(404, "Domain not found")
     return {"domain": {"id": domain.id, "name": domain.name, "enabled": domain.enabled}}
+
+
+# ── Groups ───────────────────────────────────────────────
+
+@router.get("/v3/groups")
+async def list_groups(request: Request):
+    _require_token(request)
+    return {"groups": []}
+
+
+@router.get("/v3/groups/{group_id}")
+async def get_group(group_id: str, request: Request):
+    _require_token(request)
+    return _error(404, "Group not found")
+
+
+@router.get("/v3/groups/{group_id}/users")
+async def list_group_users(group_id: str, request: Request):
+    _require_token(request)
+    return {"users": []}
+
+
+# ── Application Credentials ──────────────────────────────
+
+@router.get("/v3/users/{user_id}/application_credentials")
+async def list_application_credentials(user_id: str, request: Request):
+    _require_token(request)
+    return {"application_credentials": []}
+
+
+# ── Registered Limits ─────────────────────────────────────
+
+@router.get("/v3/registered_limits")
+async def list_registered_limits(request: Request):
+    _require_token(request)
+    return {"registered_limits": []}
+
+
+@router.get("/v3/limits")
+async def list_limits(request: Request):
+    _require_token(request)
+    return {"limits": []}
+
+
+# ── Credentials ──────────────────────────────────────────
+
+@router.get("/v3/credentials")
+async def list_credentials(request: Request):
+    _require_token(request)
+    return {"credentials": []}
+
+
+# ── Regions ──────────────────────────────────────────────
+
+@router.get("/v3/regions")
+async def list_regions(request: Request):
+    _require_token(request)
+    return {
+        "regions": [
+            {"id": "RegionOne", "description": "", "parent_region_id": None, "links": {}}
+        ]
+    }
