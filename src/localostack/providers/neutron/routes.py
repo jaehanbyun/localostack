@@ -554,3 +554,27 @@ async def get_floatingip(fip_id: str, request: Request):
 async def delete_floatingip(fip_id: str, request: Request):
     _require_token(request)
     return Response(status_code=204)
+
+
+# ── Subnet Pools ─────────────────────────────────────────
+
+@router.get("/v2.0/subnetpools")
+async def list_subnetpools(request: Request):
+    _require_token(request)
+    return {"subnetpools": []}
+
+
+# ── Network IP Availability ───────────────────────────────
+
+@router.get("/v2.0/network-ip-availabilities")
+async def list_network_ip_availabilities(request: Request):
+    _require_token(request)
+    return {"network_ip_availabilities": []}
+
+
+# ── Address Scopes ────────────────────────────────────────
+
+@router.get("/v2.0/address-scopes")
+async def list_address_scopes(request: Request):
+    _require_token(request)
+    return {"address_scopes": []}

@@ -279,3 +279,33 @@ async def delete_member(pool_id: str, member_id: str, request: Request):
     if not store.delete_member(member_id, pool_id):
         return Response(status_code=404)
     return Response(status_code=204)
+
+
+# ── Health Monitors ───────────────────────────────────────────────────
+
+@router.get("/v2/lbaas/healthmonitors")
+async def list_healthmonitors(request: Request):
+    if not _require_token(request):
+        return Response(status_code=401)
+    return {"healthmonitors": []}
+
+
+@router.post("/v2/lbaas/healthmonitors", status_code=201)
+async def create_healthmonitor(request: Request):
+    if not _require_token(request):
+        return Response(status_code=401)
+    return Response(status_code=501)
+
+
+@router.get("/v2/lbaas/healthmonitors/{hm_id}")
+async def get_healthmonitor(hm_id: str, request: Request):
+    if not _require_token(request):
+        return Response(status_code=401)
+    return Response(status_code=404)
+
+
+@router.delete("/v2/lbaas/healthmonitors/{hm_id}")
+async def delete_healthmonitor(hm_id: str, request: Request):
+    if not _require_token(request):
+        return Response(status_code=401)
+    return Response(status_code=404)

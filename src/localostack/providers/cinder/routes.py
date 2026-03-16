@@ -179,6 +179,13 @@ async def list_snapshots(project_id: str, request: Request):
     return {"snapshots": [_snapshot_detail(s) for s in store.list_snapshots()]}
 
 
+@router.get("/v3/{project_id}/snapshots/detail")
+async def list_snapshots_detail(project_id: str, request: Request):
+    _require_token(request)
+    store = _get_store(request)
+    return {"snapshots": [_snapshot_detail(s) for s in store.list_snapshots()]}
+
+
 @router.post("/v3/{project_id}/snapshots", status_code=202)
 async def create_snapshot(project_id: str, request: Request):
     _require_token(request)
@@ -231,3 +238,75 @@ async def get_volume_type(project_id: str, type_id: str, request: Request):
     if vt is None:
         return _error(404, "itemNotFound", "VolumeType not found")
     return {"volume_type": _volume_type_detail(vt)}
+
+
+# ── Backups ───────────────────────────────────────────────
+
+@router.get("/v3/{project_id}/backups")
+async def list_backups(project_id: str, request: Request):
+    _require_token(request)
+    return {"backups": []}
+
+
+@router.get("/v3/{project_id}/backups/detail")
+async def list_backups_detail(project_id: str, request: Request):
+    _require_token(request)
+    return {"backups": []}
+
+
+# ── Availability Zones ────────────────────────────────────
+
+@router.get("/v3/{project_id}/os-availability-zone")
+async def list_cinder_availability_zones(project_id: str, request: Request):
+    _require_token(request)
+    return {
+        "availabilityZoneInfo": [
+            {"zoneName": "nova", "zoneState": {"available": True}}
+        ]
+    }
+
+
+# ── Quota Sets ────────────────────────────────────────────
+
+_DEFAULT_CINDER_QUOTA = {
+    "gigabytes": 1000, "snapshots": 10, "volumes": 10,
+    "backups": 10, "backup_gigabytes": 1000,
+    "per_volume_gigabytes": -1,
+}
+
+
+@router.get("/v3/{project_id}/os-quota-sets/{target_project_id}")
+async def get_cinder_quota_sets(project_id: str, target_project_id: str, request: Request):
+    _require_token(request)
+    return {"quota_set": {**_DEFAULT_CINDER_QUOTA, "id": target_project_id}}
+
+
+@router.get("/v3/{project_id}/os-quota-sets/{target_project_id}/detail")
+async def get_cinder_quota_sets_detail(project_id: str, target_project_id: str, request: Request):
+    _require_token(request)
+    details = {k: {"limit": v, "in_use": 0, "reserved": 0, "allocated": 0} for k, v in _DEFAULT_CINDER_QUOTA.items()}
+    return {"quota_set": {**details, "id": target_project_id}}
+
+
+# ── Volume limits ─────────────────────────────────────────
+
+@router.get("/v3/{project_id}/limits")
+async def get_cinder_limits(project_id: str, request: Request):
+    _require_token(request)
+    return {
+        "limits": {
+            "absolute": {
+                "maxTotalVolumes": 10,
+                "maxTotalSnapshots": 10,
+                "maxTotalVolumeGigabytes": 1000,
+                "maxTotalBackups": 10,
+                "maxTotalBackupGigabytes": 1000,
+                "totalVolumesUsed": 0,
+                "totalGigabytesUsed": 0,
+                "totalSnapshotsUsed": 0,
+                "totalBackupsUsed": 0,
+                "totalBackupGigabytesUsed": 0,
+            },
+            "rate": [],
+        }
+    }

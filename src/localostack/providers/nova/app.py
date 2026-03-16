@@ -91,4 +91,18 @@ def create_nova_app(backend=None, fault_registry=None) -> FastAPI:
             ]
         }
 
+    @app.get("/v2.1")
+    @app.get("/v2.1/")
+    async def v21_root(request: Request):
+        base = str(request.base_url).rstrip("/")
+        return {
+            "version": {
+                "id": "v2.1",
+                "status": "CURRENT",
+                "version": NOVA_MAX_MICROVERSION,
+                "min_version": NOVA_MIN_MICROVERSION,
+                "links": [{"rel": "self", "href": f"{base}/v2.1/"}],
+            }
+        }
+
     return app

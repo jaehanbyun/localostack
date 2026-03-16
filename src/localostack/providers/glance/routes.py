@@ -211,3 +211,58 @@ async def image_schema():
             "schema": {"type": "string"},
         },
     }
+
+
+# ── Info endpoints ─────────────────────────────────────────
+
+@router.get("/v2/info/import")
+async def get_import_info():
+    return {
+        "import-methods": {
+            "type": "array",
+            "value": ["glance-direct", "web-download", "glance-download", "copy-image"],
+            "description": "Import methods available."
+        }
+    }
+
+
+@router.get("/v2/info/stores")
+async def get_stores_info():
+    return {
+        "stores": [
+            {
+                "id": "default_backend",
+                "description": "Default filesystem store",
+                "default": True,
+            }
+        ]
+    }
+
+
+@router.get("/v2/info/usage")
+async def get_usage_info():
+    return {"quota_usage": {}}
+
+
+# ── Tasks ──────────────────────────────────────────────────
+
+@router.get("/v2/tasks")
+async def list_tasks(request: Request):
+    _require_token(request)
+    return {
+        "tasks": [],
+        "schema": "/v2/schemas/tasks",
+        "first": "/v2/tasks",
+    }
+
+
+# ── Metadefs ───────────────────────────────────────────────
+
+@router.get("/v2/metadefs/namespaces")
+async def list_metadefs(request: Request):
+    _require_token(request)
+    return {
+        "namespaces": [],
+        "schema": "/v2/schemas/metadefs/namespaces",
+        "first": "/v2/metadefs/namespaces",
+    }

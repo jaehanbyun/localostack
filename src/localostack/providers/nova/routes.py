@@ -447,3 +447,173 @@ async def get_limits(request: Request):
             "rate": [],
         }
     }
+
+
+# ── Aggregates ────────────────────────────────────────────
+
+@router.get("/v2.1/os-aggregates")
+async def list_aggregates(request: Request):
+    _require_token(request)
+    return {"aggregates": []}
+
+
+@router.post("/v2.1/os-aggregates")
+async def create_aggregate(request: Request):
+    _require_token(request)
+    return Response(status_code=501)
+
+
+@router.get("/v2.1/os-aggregates/{aggregate_id}")
+async def get_aggregate(aggregate_id: str, request: Request):
+    _require_token(request)
+    return _error(404, "Aggregate not found")
+
+
+# ── Availability Zones ────────────────────────────────────
+
+@router.get("/v2.1/os-availability-zone")
+@router.get("/v2.1/os-availability-zone/detail")
+async def list_availability_zones(request: Request):
+    _require_token(request)
+    return {
+        "availabilityZoneInfo": [
+            {
+                "zoneName": "nova",
+                "zoneState": {"available": True},
+                "hosts": None,
+            }
+        ]
+    }
+
+
+# ── Server Groups ─────────────────────────────────────────
+
+@router.get("/v2.1/os-server-groups")
+async def list_server_groups(request: Request):
+    _require_token(request)
+    return {"server_groups": []}
+
+
+# ── Extensions ────────────────────────────────────────────
+
+@router.get("/v2.1/extensions")
+async def list_extensions(request: Request):
+    _require_token(request)
+    return {"extensions": []}
+
+
+# ── Hypervisors ───────────────────────────────────────────
+
+@router.get("/v2.1/os-hypervisors")
+@router.get("/v2.1/os-hypervisors/detail")
+async def list_hypervisors(request: Request):
+    _require_token(request)
+    return {
+        "hypervisors": [
+            {
+                "id": "1",
+                "hypervisor_hostname": "localostack",
+                "state": "up",
+                "status": "enabled",
+                "hypervisor_type": "QEMU",
+                "vcpus": 16,
+                "memory_mb": 32768,
+                "local_gb": 500,
+                "vcpus_used": 0,
+                "memory_mb_used": 0,
+                "local_gb_used": 0,
+            }
+        ]
+    }
+
+
+# ── Compute Floating IPs (legacy) ─────────────────────────
+
+@router.get("/v2.1/os-floating-ips")
+async def list_compute_floating_ips(request: Request):
+    _require_token(request)
+    return {"floating_ips": []}
+
+
+@router.get("/v2.1/os-floating-ips/{fip_id}")
+async def get_compute_floating_ip(fip_id: str, request: Request):
+    _require_token(request)
+    return _error(404, "Floating IP not found")
+
+
+# ── Agents ────────────────────────────────────────────────
+
+@router.get("/v2.1/os-agents")
+async def list_agents(request: Request):
+    _require_token(request)
+    return {"agents": []}
+
+
+# ── Server sub-resources ──────────────────────────────────
+
+@router.get("/v2.1/servers/{server_id}/os-security-groups")
+async def get_server_security_groups(server_id: str, request: Request):
+    _require_token(request)
+    store = _get_store(request)
+    srv = store.get_server(server_id)
+    if srv is None or srv.status == "DELETED":
+        return _error(404, "Instance not found")
+    return {"security_groups": [{"name": sg} if isinstance(sg, str) else sg for sg in (srv.security_groups or [])]}
+
+
+@router.get("/v2.1/servers/{server_id}/os-volume_attachments")
+async def get_server_volumes(server_id: str, request: Request):
+    _require_token(request)
+    store = _get_store(request)
+    srv = store.get_server(server_id)
+    if srv is None or srv.status == "DELETED":
+        return _error(404, "Instance not found")
+    return {"volumeAttachments": srv.volumes_attached or []}
+
+
+@router.get("/v2.1/servers/{server_id}/os-instance-actions")
+async def get_server_instance_actions(server_id: str, request: Request):
+    _require_token(request)
+    store = _get_store(request)
+    srv = store.get_server(server_id)
+    if srv is None or srv.status == "DELETED":
+        return _error(404, "Instance not found")
+    return {"instanceActions": []}
+
+
+@router.get("/v2.1/servers/{server_id}/os-interface")
+async def get_server_interfaces(server_id: str, request: Request):
+    _require_token(request)
+    store = _get_store(request)
+    srv = store.get_server(server_id)
+    if srv is None or srv.status == "DELETED":
+        return _error(404, "Instance not found")
+    return {"interfaceAttachments": []}
+
+
+@router.get("/v2.1/servers/{server_id}/metadata")
+async def get_server_metadata(server_id: str, request: Request):
+    _require_token(request)
+    store = _get_store(request)
+    srv = store.get_server(server_id)
+    if srv is None or srv.status == "DELETED":
+        return _error(404, "Instance not found")
+    return {"metadata": srv.metadata or {}}
+
+
+@router.get("/v2.1/servers/{server_id}/ips")
+async def get_server_ips(server_id: str, request: Request):
+    _require_token(request)
+    store = _get_store(request)
+    srv = store.get_server(server_id)
+    if srv is None or srv.status == "DELETED":
+        return _error(404, "Instance not found")
+    return {"addresses": srv.addresses or {}}
+
+
+# ── Console / VNC ─────────────────────────────────────────
+
+@router.get("/v2.1/servers/{server_id}/remote-consoles")
+async def get_server_console(server_id: str, request: Request):
+    _require_token(request)
+    return _error(501, "Consoles not supported")
