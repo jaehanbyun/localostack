@@ -85,49 +85,87 @@
     a { color: var(--blue); text-decoration: none; }
     a:hover { text-decoration: underline; }
 
-    /* ── Nav ─────────────────────────────────── */
+    /* ── New shadcn-style Nav ─── */
     nav {
       position: fixed; top: 0; left: 0; right: 0; z-index: 200;
-      background: rgba(0,0,0,0.6);
+      background: rgba(0,0,0,0.7);
       backdrop-filter: blur(16px);
       -webkit-backdrop-filter: blur(16px);
       border-bottom: 1px solid var(--border);
-      padding: 0 2rem;
-      height: 60px;
-      display: flex; align-items: center; justify-content: space-between;
     }
-    .nav-brand {
-      font-weight: 700; font-size: 1rem; color: #fff;
-      display: flex; align-items: center; gap: .6rem;
+    .nav-inner {
+      max-width: 1100px; margin: 0 auto;
+      padding: 0 1.5rem; height: 60px;
+      display: none; align-items: center; justify-content: space-between;
     }
-    .nav-brand-mark {
-      width: 24px; height: 24px;
-      background: url('favicon.svg') center/contain no-repeat;
+    @media (min-width: 1024px) {
+      .nav-inner { display: flex; }
     }
-    .nav-badge {
-      font-size: .6rem; font-weight: 700; padding: 2px 7px;
+    /* Logo */
+    .nav-logo { display: flex; align-items: center; gap: .5rem; text-decoration: none; }
+    .nav-logo img { width: 24px; height: 24px; }
+    .nav-logo-text { font-weight: 700; font-size: .95rem; color: #fff; }
+    .nav-logo-badge {
+      font-size: .6rem; font-weight: 700; padding: 1px 6px;
       background: rgba(251,113,133,0.15); color: var(--rose);
       border: 1px solid rgba(251,113,133,0.25);
-      border-radius: 20px; letter-spacing: .06em; text-transform: uppercase;
+      border-radius: 20px; letter-spacing: .06em;
     }
-    .nav-links { display: flex; align-items: center; gap: 1.5rem; }
-    .nav-links a {
-      color: var(--text-dim); font-size: .88rem;
-      transition: color .15s;
+    /* Desktop nav links */
+    .nav-links-desktop {
+      display: none;
     }
-    .nav-links a:hover { color: var(--text); text-decoration: none; }
-    .nav-actions { display: flex; align-items: center; gap: .5rem; }
-    .nav-btn {
-      padding: .4rem 1rem; border-radius: 999px;
-      font-size: .82rem; font-weight: 500; cursor: pointer;
-      transition: all .15s; border: 1px solid var(--border);
-      background: transparent; color: var(--text-dim);
+    @media (min-width: 1024px) {
+      .nav-links-desktop { display: flex; align-items: center; gap: .25rem; }
     }
-    .nav-btn:hover { color: #fff; border-color: rgba(255,255,255,0.2); }
-    .nav-btn-primary {
-      background: #fff; color: #000; border-color: #fff;
+    .nav-link {
+      display: inline-flex; align-items: center; height: 36px; padding: 0 .75rem;
+      border-radius: 8px; font-size: .875rem; font-weight: 500;
+      color: var(--text-dim); text-decoration: none;
+      transition: background .15s, color .15s; white-space: nowrap;
+      background: transparent; border: none; cursor: pointer; gap: .25rem;
     }
-    .nav-btn-primary:hover { background: rgba(255,255,255,0.88); }
+    .nav-link:hover, .nav-link[aria-expanded="true"] {
+      background: rgba(255,255,255,0.08); color: var(--text);
+    }
+    .nav-link .chevron {
+      width: 12px; height: 12px; transition: transform .2s;
+      opacity: .7;
+    }
+    .nav-link[aria-expanded="true"] .chevron { transform: rotate(180deg); }
+
+    /* Dropdown */
+    .nav-dropdown-wrap { position: relative; }
+    .nav-dropdown {
+      position: absolute; top: calc(100% + 8px); left: 0;
+      background: var(--bg2); border: 1px solid var(--border);
+      border-radius: 12px; box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+      padding: .5rem; min-width: 280px; z-index: 300;
+      display: none; flex-direction: column; gap: 2px;
+      animation: ddFadeIn .15s ease-out;
+    }
+    @keyframes ddFadeIn {
+      from { opacity: 0; transform: translateY(-6px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .nav-dropdown.open { display: flex; }
+    .nav-dropdown-item {
+      display: flex; align-items: flex-start; gap: .75rem;
+      padding: .65rem .75rem; border-radius: 8px;
+      text-decoration: none; transition: background .12s;
+    }
+    .nav-dropdown-item:hover { background: rgba(255,255,255,0.06); }
+    .nav-dropdown-icon { font-size: 1.1rem; margin-top: 1px; flex-shrink: 0; }
+    .nav-dropdown-title { font-size: .875rem; font-weight: 600; color: #fff; }
+    .nav-dropdown-desc  { font-size: .78rem; color: var(--text-dim); margin-top: 1px; }
+
+    /* Right side */
+    .nav-right {
+      display: none; align-items: center; gap: .5rem;
+    }
+    @media (min-width: 1024px) { .nav-right { display: flex; } }
+
+    /* Language switcher */
     .lang-switcher {
       display: flex; gap: 3px;
       background: rgba(255,255,255,0.05);
@@ -139,6 +177,126 @@
       color: var(--text-dim); transition: all .15s;
     }
     .lang-btn.active { background: rgba(255,255,255,0.12); color: #fff; }
+
+    /* Nav buttons */
+    .nav-btn-outline {
+      padding: .35rem .9rem; border-radius: 8px;
+      font-size: .82rem; font-weight: 500; cursor: pointer;
+      border: 1px solid var(--border); background: transparent;
+      color: var(--text-dim); text-decoration: none;
+      transition: all .15s;
+    }
+    .nav-btn-outline:hover { color: #fff; border-color: rgba(255,255,255,0.2); text-decoration: none; }
+    .nav-btn-primary {
+      padding: .35rem .9rem; border-radius: 8px;
+      font-size: .82rem; font-weight: 600; cursor: pointer;
+      border: 1px solid transparent; background: #fff; color: #000;
+      text-decoration: none; transition: all .15s;
+    }
+    .nav-btn-primary:hover { background: rgba(255,255,255,0.88); text-decoration: none; }
+
+    /* Mobile hamburger */
+    .nav-mobile {
+      display: flex; align-items: center; justify-content: space-between;
+      height: 60px; padding: 0 1rem; width: 100%;
+    }
+    @media (min-width: 1024px) { .nav-mobile { display: none; } }
+    .nav-hamburger {
+      background: transparent; border: 1px solid var(--border);
+      border-radius: 8px; padding: .4rem; cursor: pointer; color: var(--text);
+      display: flex; align-items: center;
+    }
+
+    /* Sheet overlay */
+    .sheet-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 400;
+      opacity: 0; pointer-events: none; transition: opacity .3s;
+    }
+    .sheet-overlay.open { opacity: 1; pointer-events: auto; }
+
+    /* Sheet panel */
+    .sheet-panel {
+      position: fixed; top: 0; right: 0; bottom: 0;
+      width: min(320px, 85vw);
+      background: var(--bg2); z-index: 500;
+      transform: translateX(100%); transition: transform .3s ease;
+      display: flex; flex-direction: column;
+      border-left: 1px solid var(--border);
+    }
+    .sheet-panel.open { transform: translateX(0); }
+    .sheet-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 1rem 1.25rem; border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    .sheet-close {
+      background: transparent; border: none; cursor: pointer;
+      color: var(--text-dim); padding: .25rem; border-radius: 6px;
+      transition: color .15s;
+    }
+    .sheet-close:hover { color: var(--text); }
+    .sheet-body { flex: 1; overflow-y: auto; padding: 1.25rem; }
+
+    /* Mobile accordion */
+    .m-accordion { display: flex; flex-direction: column; gap: 4px; }
+    .m-acc-trigger {
+      display: flex; align-items: center; justify-content: space-between;
+      width: 100%; background: transparent; border: none; cursor: pointer;
+      color: var(--text); font-size: .9rem; font-weight: 600;
+      padding: .6rem 0; text-align: left;
+    }
+    .m-acc-chevron { width: 14px; height: 14px; transition: transform .2s; opacity: .7; }
+    .m-acc-trigger[aria-expanded="true"] .m-acc-chevron { transform: rotate(180deg); }
+    .m-acc-content {
+      overflow: hidden;
+      max-height: 0; transition: max-height .25s ease;
+    }
+    .m-acc-content.open { max-height: 500px; }
+    .m-acc-item {
+      display: flex; align-items: flex-start; gap: .6rem;
+      padding: .6rem .5rem; border-radius: 8px;
+      text-decoration: none; transition: background .12s;
+    }
+    .m-acc-item:hover { background: rgba(255,255,255,0.06); }
+    .m-acc-item-icon { font-size: 1rem; flex-shrink: 0; margin-top: 1px; }
+    .m-acc-item-title { font-size: .85rem; font-weight: 600; color: #fff; }
+    .m-acc-item-desc  { font-size: .76rem; color: var(--text-dim); margin-top: 1px; }
+    .m-plain-link {
+      display: block; font-size: .9rem; font-weight: 600;
+      color: var(--text); text-decoration: none; padding: .6rem 0;
+    }
+    .m-plain-link:hover { color: #fff; }
+
+    /* Mobile extra links */
+    .sheet-extra {
+      border-top: 1px solid var(--border); padding: 1rem 0;
+      display: grid; grid-template-columns: 1fr 1fr; gap: .25rem;
+    }
+    .sheet-extra a {
+      padding: .5rem .75rem; border-radius: 8px; font-size: .82rem;
+      color: var(--text-dim); text-decoration: none; font-weight: 500;
+      transition: background .12s, color .12s;
+    }
+    .sheet-extra a:hover { background: rgba(255,255,255,0.06); color: var(--text); }
+
+    /* Mobile buttons */
+    .sheet-buttons {
+      display: flex; flex-direction: column; gap: .5rem;
+      padding-top: 1rem;
+    }
+    .sheet-btn-outline {
+      padding: .6rem 1rem; border-radius: 8px; font-size: .875rem;
+      font-weight: 500; border: 1px solid var(--border);
+      background: transparent; color: var(--text); cursor: pointer;
+      text-decoration: none; text-align: center; transition: all .15s;
+    }
+    .sheet-btn-outline:hover { border-color: rgba(255,255,255,0.2); text-decoration: none; }
+    .sheet-btn-primary {
+      padding: .6rem 1rem; border-radius: 8px; font-size: .875rem;
+      font-weight: 600; background: #fff; color: #000; cursor: pointer;
+      border: none; text-decoration: none; text-align: center; transition: all .15s;
+    }
+    .sheet-btn-primary:hover { background: rgba(255,255,255,0.88); text-decoration: none; }
 
     /* ── Hero ────────────────────────────────── */
     .hero-section {
@@ -508,8 +666,6 @@
 
     /* Responsive */
     @media (max-width: 640px) {
-      nav { padding: 0 1rem; }
-      .nav-links { display: none; }
       .hero-content { padding: 90px 1.5rem 60px; }
       section { padding: 3rem 1rem; }
       h1 { font-size: 2.4rem; }
@@ -521,27 +677,183 @@
 <div id="aurora-root"></div>
 
 <!-- ── Navigation ─────────────────────────────────────────────────── -->
-<nav>
-  <div class="nav-brand">
-    <div class="nav-brand-mark"></div>
-    <span>LocalOStack</span>
-    <span class="nav-badge">v0.1</span>
-  </div>
-  <div class="nav-links">
-    <a href="#services"   data-en="Services"    data-ko="서비스">Services</a>
-    <a href="#quickstart" data-en="Quick Start"  data-ko="빠른 시작">Quick Start</a>
-    <a href="#config"     data-en="Config"       data-ko="설정">Config</a>
-    <div class="lang-switcher">
-      <button class="lang-btn active" onclick="setLang('en')">EN</button>
-      <button class="lang-btn"        onclick="setLang('ko')">한국어</button>
+<nav id="main-nav">
+  <!-- Desktop -->
+  <div class="nav-inner">
+    <!-- Logo -->
+    <a href="#" class="nav-logo">
+      <img src="favicon.svg" alt="LocalOStack" />
+      <span class="nav-logo-text">LocalOStack</span>
+      <span class="nav-logo-badge">v0.1</span>
+    </a>
+
+    <!-- Desktop nav menu -->
+    <div class="nav-links-desktop">
+      <a href="#" class="nav-link">Home</a>
+
+      <!-- Services dropdown -->
+      <div class="nav-dropdown-wrap">
+        <button class="nav-link" aria-expanded="false" data-dropdown="dd-services">
+          Services
+          <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+        <div class="nav-dropdown" id="dd-services">
+          <a class="nav-dropdown-item" href="#services">
+            <span class="nav-dropdown-icon">🔑</span>
+            <div><div class="nav-dropdown-title">Keystone</div><div class="nav-dropdown-desc">Identity &amp; authentication</div></div>
+          </a>
+          <a class="nav-dropdown-item" href="#services">
+            <span class="nav-dropdown-icon">🖥️</span>
+            <div><div class="nav-dropdown-title">Nova</div><div class="nav-dropdown-desc">Compute service</div></div>
+          </a>
+          <a class="nav-dropdown-item" href="#services">
+            <span class="nav-dropdown-icon">🌐</span>
+            <div><div class="nav-dropdown-title">Neutron</div><div class="nav-dropdown-desc">Network service</div></div>
+          </a>
+          <a class="nav-dropdown-item" href="#services">
+            <span class="nav-dropdown-icon">🖼️</span>
+            <div><div class="nav-dropdown-title">Glance</div><div class="nav-dropdown-desc">Image service</div></div>
+          </a>
+        </div>
+      </div>
+
+      <!-- Docs dropdown -->
+      <div class="nav-dropdown-wrap">
+        <button class="nav-link" aria-expanded="false" data-dropdown="dd-docs">
+          Docs
+          <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+        <div class="nav-dropdown" id="dd-docs">
+          <a class="nav-dropdown-item" href="#quickstart">
+            <span class="nav-dropdown-icon">⚡</span>
+            <div><div class="nav-dropdown-title">Quick Start</div><div class="nav-dropdown-desc">Up and running in 3 steps</div></div>
+          </a>
+          <a class="nav-dropdown-item" href="#config">
+            <span class="nav-dropdown-icon">⚙️</span>
+            <div><div class="nav-dropdown-title">Configuration</div><div class="nav-dropdown-desc">Environment variables reference</div></div>
+          </a>
+          <a class="nav-dropdown-item" href="#services">
+            <span class="nav-dropdown-icon">🔗</span>
+            <div><div class="nav-dropdown-title">Compatibility</div><div class="nav-dropdown-desc">SDK, Terraform, gophercloud</div></div>
+          </a>
+          <a class="nav-dropdown-item" href="#fault">
+            <span class="nav-dropdown-icon">💥</span>
+            <div><div class="nav-dropdown-title">Fault Injection</div><div class="nav-dropdown-desc">Test resilience with error injection</div></div>
+          </a>
+        </div>
+      </div>
+
+      <a href="https://github.com/jaehanbyun/localostack" target="_blank" class="nav-link">GitHub</a>
+    </div>
+
+    <!-- Right side -->
+    <div class="nav-right">
+      <div class="lang-switcher">
+        <button class="lang-btn active" onclick="setLang('en')">EN</button>
+        <button class="lang-btn" onclick="setLang('ko')">한국어</button>
+      </div>
+      <a href="https://github.com/jaehanbyun/localostack" target="_blank" class="nav-btn-outline">GitHub ↗</a>
+      <a href="#quickstart" class="nav-btn-primary" data-en="Quick Start" data-ko="시작하기">Quick Start</a>
     </div>
   </div>
-  <div class="nav-actions">
-    <a class="nav-btn" href="https://github.com/jaehanbyun/localostack" target="_blank">GitHub ↗</a>
-    <a class="nav-btn nav-btn-primary btn" href="#quickstart"
-      data-en="Quick Start" data-ko="시작하기">Quick Start</a>
+
+  <!-- Mobile -->
+  <div class="nav-mobile">
+    <a href="#" class="nav-logo">
+      <img src="favicon.svg" alt="LocalOStack" />
+      <span class="nav-logo-text">LocalOStack</span>
+      <span class="nav-logo-badge">v0.1</span>
+    </a>
+    <button class="nav-hamburger" id="sheet-open-btn" aria-label="Open menu">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    </button>
   </div>
 </nav>
+
+<!-- ── Sheet overlay + panel ───────────────────────────────────────── -->
+<div class="sheet-overlay" id="sheet-overlay"></div>
+<div class="sheet-panel" id="sheet-panel">
+  <div class="sheet-header">
+    <a href="#" class="nav-logo" onclick="closeSheet()">
+      <img src="favicon.svg" alt="LocalOStack" />
+      <span class="nav-logo-text">LocalOStack</span>
+    </a>
+    <button class="sheet-close" id="sheet-close-btn" aria-label="Close">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+  </div>
+  <div class="sheet-body">
+    <div class="m-accordion">
+      <a href="#" class="m-plain-link" onclick="closeSheet()">Home</a>
+
+      <!-- Services accordion item -->
+      <div>
+        <button class="m-acc-trigger" aria-expanded="false" data-acc="m-acc-services">
+          Services
+          <svg class="m-acc-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+        <div class="m-acc-content" id="m-acc-services">
+          <a class="m-acc-item" href="#services" onclick="closeSheet()">
+            <span class="m-acc-item-icon">🔑</span>
+            <div><div class="m-acc-item-title">Keystone</div><div class="m-acc-item-desc">Identity &amp; authentication</div></div>
+          </a>
+          <a class="m-acc-item" href="#services" onclick="closeSheet()">
+            <span class="m-acc-item-icon">🖥️</span>
+            <div><div class="m-acc-item-title">Nova</div><div class="m-acc-item-desc">Compute service</div></div>
+          </a>
+          <a class="m-acc-item" href="#services" onclick="closeSheet()">
+            <span class="m-acc-item-icon">🌐</span>
+            <div><div class="m-acc-item-title">Neutron</div><div class="m-acc-item-desc">Network service</div></div>
+          </a>
+          <a class="m-acc-item" href="#services" onclick="closeSheet()">
+            <span class="m-acc-item-icon">🖼️</span>
+            <div><div class="m-acc-item-title">Glance</div><div class="m-acc-item-desc">Image service</div></div>
+          </a>
+        </div>
+      </div>
+
+      <!-- Docs accordion item -->
+      <div>
+        <button class="m-acc-trigger" aria-expanded="false" data-acc="m-acc-docs">
+          Docs
+          <svg class="m-acc-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+        <div class="m-acc-content" id="m-acc-docs">
+          <a class="m-acc-item" href="#quickstart" onclick="closeSheet()">
+            <span class="m-acc-item-icon">⚡</span>
+            <div><div class="m-acc-item-title">Quick Start</div><div class="m-acc-item-desc">Up and running in 3 steps</div></div>
+          </a>
+          <a class="m-acc-item" href="#config" onclick="closeSheet()">
+            <span class="m-acc-item-icon">⚙️</span>
+            <div><div class="m-acc-item-title">Configuration</div><div class="m-acc-item-desc">Environment variables reference</div></div>
+          </a>
+          <a class="m-acc-item" href="#services" onclick="closeSheet()">
+            <span class="m-acc-item-icon">🔗</span>
+            <div><div class="m-acc-item-title">Compatibility</div><div class="m-acc-item-desc">SDK, Terraform, gophercloud</div></div>
+          </a>
+          <a class="m-acc-item" href="#fault" onclick="closeSheet()">
+            <span class="m-acc-item-icon">💥</span>
+            <div><div class="m-acc-item-title">Fault Injection</div><div class="m-acc-item-desc">Test resilience with error injection</div></div>
+          </a>
+        </div>
+      </div>
+
+      <a href="https://github.com/jaehanbyun/localostack" target="_blank" class="m-plain-link">GitHub</a>
+    </div>
+
+    <div class="sheet-extra">
+      <a href="https://github.com/jaehanbyun/localostack/issues">Issues</a>
+      <a href="https://github.com/jaehanbyun/localostack/blob/main/LICENSE">License</a>
+      <a href="https://github.com/jaehanbyun/localostack">Star ⭐</a>
+      <a href="https://github.com/jaehanbyun/localostack/releases">Releases</a>
+    </div>
+
+    <div class="sheet-buttons">
+      <a href="https://github.com/jaehanbyun/localostack" target="_blank" class="sheet-btn-outline">GitHub ↗</a>
+      <a href="#quickstart" class="sheet-btn-primary" onclick="closeSheet()">Quick Start</a>
+    </div>
+  </div>
+</div>
 
 <!-- ── Hero ───────────────────────────────────────────────────────── -->
 <section class="hero-section">
@@ -925,7 +1237,7 @@ open http://localhost:9999</pre>
 <hr class="divider" />
 
 <!-- Fault Injection callout -->
-<section>
+<section id="fault">
   <div class="container">
     <div class="callout">
       <div class="section-label" data-en="ADVANCED" data-ko="고급 기능" style="margin-bottom:.5rem">ADVANCED</div>
@@ -1040,6 +1352,72 @@ curl -X DELETE http://localhost:9999/admin/fault-rules</pre>
       if (target) {
         e.preventDefault();
         target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    });
+  });
+
+  // ── Dropdown menus ────────────────────────────────────────────────
+  document.querySelectorAll('[data-dropdown]').forEach(btn => {
+    const ddId = btn.dataset.dropdown;
+    const dd = document.getElementById(ddId);
+    if (!dd) return;
+
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const isOpen = dd.classList.contains('open');
+      // close all dropdowns first
+      document.querySelectorAll('.nav-dropdown.open').forEach(d => {
+        d.classList.remove('open');
+        d.previousElementSibling?.setAttribute('aria-expanded', 'false');
+      });
+      if (!isOpen) {
+        dd.classList.add('open');
+        btn.setAttribute('aria-expanded', 'true');
+      }
+    });
+  });
+
+  document.addEventListener('click', () => {
+    document.querySelectorAll('.nav-dropdown.open').forEach(d => {
+      d.classList.remove('open');
+      d.previousElementSibling?.setAttribute('aria-expanded', 'false');
+    });
+  });
+
+  // ── Mobile sheet ──────────────────────────────────────────────────
+  const sheetOverlay = document.getElementById('sheet-overlay');
+  const sheetPanel   = document.getElementById('sheet-panel');
+
+  function openSheet() {
+    sheetOverlay.classList.add('open');
+    sheetPanel.classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+  function closeSheet() {
+    sheetOverlay.classList.remove('open');
+    sheetPanel.classList.remove('open');
+    document.body.style.overflow = '';
+  }
+
+  document.getElementById('sheet-open-btn').addEventListener('click', openSheet);
+  document.getElementById('sheet-close-btn').addEventListener('click', closeSheet);
+  sheetOverlay.addEventListener('click', closeSheet);
+
+  // ── Mobile accordion ──────────────────────────────────────────────
+  document.querySelectorAll('[data-acc]').forEach(btn => {
+    const accId = btn.dataset.acc;
+    const content = document.getElementById(accId);
+    if (!content) return;
+    btn.addEventListener('click', () => {
+      const isOpen = content.classList.contains('open');
+      // close all
+      document.querySelectorAll('.m-acc-content.open').forEach(c => {
+        c.classList.remove('open');
+        c.previousElementSibling?.setAttribute('aria-expanded', 'false');
+      });
+      if (!isOpen) {
+        content.classList.add('open');
+        btn.setAttribute('aria-expanded', 'true');
       }
     });
   });
