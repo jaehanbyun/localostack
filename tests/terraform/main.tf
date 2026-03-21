@@ -56,6 +56,29 @@ resource "openstack_blockstorage_volume_v3" "test_vol" {
   size = 1
 }
 
+# ── Networking Resources ──────────────────────────────────
+
+resource "openstack_networking_network_v2" "test_net" {
+  name           = "tf-test-network"
+  admin_state_up = true
+}
+
+resource "openstack_networking_subnet_v2" "test_subnet" {
+  name       = "tf-test-subnet"
+  network_id = openstack_networking_network_v2.test_net.id
+  cidr       = "192.168.100.0/24"
+  ip_version = 4
+}
+
+resource "openstack_networking_port_v2" "test_port" {
+  name       = "tf-test-port"
+  network_id = openstack_networking_network_v2.test_net.id
+
+  fixed_ip {
+    subnet_id = openstack_networking_subnet_v2.test_subnet.id
+  }
+}
+
 # ── Outputs ───────────────────────────────────────────────
 
 output "server_id" {
@@ -68,4 +91,16 @@ output "server_status" {
 
 output "volume_id" {
   value = openstack_blockstorage_volume_v3.test_vol.id
+}
+
+output "network_id" {
+  value = openstack_networking_network_v2.test_net.id
+}
+
+output "subnet_id" {
+  value = openstack_networking_subnet_v2.test_subnet.id
+}
+
+output "port_id" {
+  value = openstack_networking_port_v2.test_port.id
 }

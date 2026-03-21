@@ -45,7 +45,7 @@ def server_process():
         "LOCALOSTACK_ENDPOINT_HOST": "localhost",
     })
     proc = subprocess.Popen(
-        ["uv", "run", "localostack"], env=env,
+        ["uv", "run", "localostack", "start"], env=env,
         stdout=subprocess.PIPE, stderr=subprocess.PIPE,
         cwd=_PROJECT_ROOT,
     )

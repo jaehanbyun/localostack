@@ -1,0 +1,19 @@
+name: Terraform Compatibility
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  terraform-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v4
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.9"
+      - run: uv sync
+      - name: Run Terraform compatibility test
+        run: bash tests/terraform/test_terraform.sh

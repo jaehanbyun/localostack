@@ -19,7 +19,7 @@ LOCALOSTACK_GLANCE_PORT=$GLANCE_PORT \
 LOCALOSTACK_CINDER_PORT=$CINDER_PORT \
 LOCALOSTACK_HOST=127.0.0.1 \
 LOCALOSTACK_ENDPOINT_HOST=localhost \
-  uv run localostack &
+  uv run localostack start &
 SERVER_PID=$!
 
 # Wait for Keystone
@@ -55,8 +55,14 @@ echo "=== terraform state check ==="
 terraform state list
 SERVER_ID=$(terraform output -raw server_id 2>/dev/null)
 VOLUME_ID=$(terraform output -raw volume_id 2>/dev/null)
-echo "  server_id: $SERVER_ID"
-echo "  volume_id: $VOLUME_ID"
+NETWORK_ID=$(terraform output -raw network_id 2>/dev/null)
+SUBNET_ID=$(terraform output -raw subnet_id 2>/dev/null)
+PORT_ID=$(terraform output -raw port_id 2>/dev/null)
+echo "  server_id:  $SERVER_ID"
+echo "  volume_id:  $VOLUME_ID"
+echo "  network_id: $NETWORK_ID"
+echo "  subnet_id:  $SUBNET_ID"
+echo "  port_id:    $PORT_ID"
 
 echo "=== terraform destroy ==="
 terraform destroy \
