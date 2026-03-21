@@ -971,16 +971,17 @@
             <table class="config-table">
               <thead><tr><th><span data-lang="en">Variable</span><span data-lang="ko">변수</span></th><th><span data-lang="en">Default</span><span data-lang="ko">기본값</span></th><th><span data-lang="en">Description</span><span data-lang="ko">설명</span></th></tr></thead>
               <tbody>
-                <tr><td><code>KEYSTONE_PORT</code></td><td>5000</td><td data-lang="en">Identity service port</td></tr>
-                <tr><td><code>NOVA_PORT</code></td><td>8774</td><td data-lang="en">Compute service port</td></tr>
-                <tr><td><code>NEUTRON_PORT</code></td><td>9696</td><td data-lang="en">Network service port</td></tr>
-                <tr><td><code>GLANCE_PORT</code></td><td>9292</td><td data-lang="en">Image service port</td></tr>
-                <tr><td><code>CINDER_PORT</code></td><td>8776</td><td data-lang="en">Block storage port</td></tr>
-                <tr><td><code>PLACEMENT_PORT</code></td><td>8778</td><td data-lang="en">Placement service port</td></tr>
-                <tr><td><code>HEAT_PORT</code></td><td>8004</td><td data-lang="en">Orchestration port</td></tr>
-                <tr><td><code>SWIFT_PORT</code></td><td>8080</td><td data-lang="en">Object storage port</td></tr>
-                <tr><td><code>BARBICAN_PORT</code></td><td>9311</td><td data-lang="en">Secrets service port</td></tr>
-                <tr><td><code>OCTAVIA_PORT</code></td><td>9876</td><td data-lang="en">Load balancer port</td></tr>
+                <tr><td><code>LOCALOSTACK_HOST</code></td><td>0.0.0.0</td><td data-lang="en">Bind address</td></tr>
+                <tr><td><code>LOCALOSTACK_KEYSTONE_PORT</code></td><td>5000</td><td data-lang="en">Identity service port</td></tr>
+                <tr><td><code>LOCALOSTACK_NOVA_PORT</code></td><td>8774</td><td data-lang="en">Compute service port</td></tr>
+                <tr><td><code>LOCALOSTACK_NEUTRON_PORT</code></td><td>9696</td><td data-lang="en">Network service port</td></tr>
+                <tr><td><code>LOCALOSTACK_GLANCE_PORT</code></td><td>9292</td><td data-lang="en">Image service port</td></tr>
+                <tr><td><code>LOCALOSTACK_CINDER_PORT</code></td><td>8776</td><td data-lang="en">Block storage port</td></tr>
+                <tr><td><code>LOCALOSTACK_PLACEMENT_PORT</code></td><td>8778</td><td data-lang="en">Placement service port</td></tr>
+                <tr><td><code>LOCALOSTACK_HEAT_PORT</code></td><td>8004</td><td data-lang="en">Orchestration port</td></tr>
+                <tr><td><code>LOCALOSTACK_SWIFT_PORT</code></td><td>8080</td><td data-lang="en">Object storage port</td></tr>
+                <tr><td><code>LOCALOSTACK_BARBICAN_PORT</code></td><td>9311</td><td data-lang="en">Secrets service port</td></tr>
+                <tr><td><code>LOCALOSTACK_OCTAVIA_PORT</code></td><td>9876</td><td data-lang="en">Load balancer port</td></tr>
               </tbody>
             </table>
           </div>
@@ -994,9 +995,9 @@
             <table class="config-table">
               <thead><tr><th><span data-lang="en">Variable</span><span data-lang="ko">변수</span></th><th><span data-lang="en">Default</span><span data-lang="ko">기본값</span></th><th><span data-lang="en">Description</span><span data-lang="ko">설명</span></th></tr></thead>
               <tbody>
-                <tr><td><code>LOCALOSTACK_USERNAME</code></td><td>demo</td><td data-lang="en">Default username</td></tr>
-                <tr><td><code>LOCALOSTACK_PASSWORD</code></td><td>demo</td><td data-lang="en">Default password</td></tr>
-                <tr><td><code>LOCALOSTACK_PROJECT</code></td><td>demo</td><td data-lang="en">Default project name</td></tr>
+                <tr><td><code>LOCALOSTACK_ADMIN_USERNAME</code></td><td>admin</td><td data-lang="en">Admin username</td></tr>
+                <tr><td><code>LOCALOSTACK_ADMIN_PASSWORD</code></td><td>password</td><td data-lang="en">Admin password</td></tr>
+                <tr><td><code>LOCALOSTACK_ADMIN_PROJECT</code></td><td>admin</td><td data-lang="en">Admin project name</td></tr>
                 <tr><td><code>LOCALOSTACK_REGION</code></td><td>RegionOne</td><td data-lang="en">Region name</td></tr>
               </tbody>
             </table>
@@ -1011,8 +1012,8 @@
             <table class="config-table">
               <thead><tr><th><span data-lang="en">Variable</span><span data-lang="ko">변수</span></th><th><span data-lang="en">Default</span><span data-lang="ko">기본값</span></th><th><span data-lang="en">Description</span><span data-lang="ko">설명</span></th></tr></thead>
               <tbody>
-                <tr><td><code>LOCALOSTACK_PERSIST</code></td><td>false</td><td data-lang="en">Enable persistent storage</td></tr>
-                <tr><td><code>LOCALOSTACK_DATA_DIR</code></td><td>/tmp/localostack</td><td data-lang="en">Data directory path</td></tr>
+                <tr><td><code>LOCALOSTACK_PERSISTENCE</code></td><td>memory</td><td data-lang="en">"memory" or "sqlite"</td></tr>
+                <tr><td><code>LOCALOSTACK_DB_PATH</code></td><td>/var/lib/localostack/state.db</td><td data-lang="en">SQLite database file path</td></tr>
               </tbody>
             </table>
           </div>
@@ -1026,8 +1027,8 @@
             <table class="config-table">
               <thead><tr><th><span data-lang="en">Variable</span><span data-lang="ko">변수</span></th><th><span data-lang="en">Default</span><span data-lang="ko">기본값</span></th><th><span data-lang="en">Description</span><span data-lang="ko">설명</span></th></tr></thead>
               <tbody>
-                <tr><td><code>LOCALOSTACK_FAULT_ENABLED</code></td><td>true</td><td data-lang="en">Enable fault injection API</td></tr>
-                <tr><td><code>ADMIN_PORT</code></td><td>9999</td><td data-lang="en">Admin/fault API port</td></tr>
+                <tr><td><code>LOCALOSTACK_FAULT_RULES</code></td><td>""</td><td data-lang="en">JSON fault rules (or use Admin API)</td></tr>
+                <tr><td><code>LOCALOSTACK_ADMIN_PORT</code></td><td>9999</td><td data-lang="en">Admin/fault API port</td></tr>
               </tbody>
             </table>
           </div>
