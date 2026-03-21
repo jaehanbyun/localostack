@@ -129,7 +129,7 @@ def _build_dashboard_html(services_json: str) -> str:
 </html>"""
 
 
-def create_admin_app(registry: FaultRegistry, config=None) -> FastAPI:
+def create_admin_app(registry: FaultRegistry, config=None, service_apps=None) -> FastAPI:
     app = FastAPI(title="LocalOStack Admin", version="1.0")
 
     # Build services list from config (or defaults)
@@ -184,5 +184,25 @@ def create_admin_app(registry: FaultRegistry, config=None) -> FastAPI:
         count = len(registry.get_rules())
         registry.clear()
         return {"cleared": count}
+
+    _service_apps = service_apps or []
+
+    @app.post("/reset")
+    async def reset_all():
+        """Clear all in-memory stores and fault rules."""
+        cleared = []
+        for svc_app in _service_apps:
+            for attr_name in dir(svc_app.state):
+                if attr_name.endswith("_store"):
+                    store = getattr(svc_app.state, attr_name)
+                    for field_name in list(vars(store)):
+                        field = getattr(store, field_name)
+                        if isinstance(field, dict):
+                            field.clear()
+                        elif isinstance(field, list):
+                            field.clear()
+                    cleared.append(attr_name.replace("_store", ""))
+        registry.clear()
+        return {"status": "ok", "cleared_services": cleared}
 
     return app

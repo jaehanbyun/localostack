@@ -5,14 +5,27 @@ description = "OpenStack API emulator for local development and testing"
 readme = "README.md"
 license = "MIT"
 requires-python = ">=3.11"
+authors = [{name = "Jaehan Byun"}]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Software Development :: Testing",
+    "Topic :: Software Development :: Testing :: Mocking",
+]
+keywords = ["openstack", "emulator", "mock", "testing", "localstack"]
 dependencies = [
     "fastapi>=0.110.0",
     "uvicorn[standard]>=0.29.0",
     "pydantic>=2.0",
+    "click>=8.0",
 ]
 
 [project.scripts]
-localostack = "localostack.cli.main:main"
+localostack = "localostack.cli.main:cli"
 
 [build-system]
 requires = ["hatchling"]
@@ -28,3 +41,9 @@ dev = [
     "httpx>=0.27",
     "openstacksdk>=4.10.0",
 ]
+
+[project.urls]
+Homepage = "https://github.com/jaehanbyun/localostack"
+Repository = "https://github.com/jaehanbyun/localostack"
+Documentation = "https://jaehanbyun.github.io/localostack/"
+Issues = "https://github.com/jaehanbyun/localostack/issues"
